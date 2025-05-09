@@ -10,5 +10,5 @@ services:
     container_name: sanfer-db
     ports:
       - 5432:5432
-    volumes:
-      - ./db/data:/var/lib/postgresql/data
+    # volumes:
+    #   - ./db/data:/var/lib/postgresql/data

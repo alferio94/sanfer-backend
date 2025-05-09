@@ -18,5 +18,5 @@ export class EventUser {
   password: string;
 
   @OneToMany(() => EventUserAssignment, (assignment) => assignment.user)
-  assignments: EventUserAssignment[];
+  events: EventUserAssignment[];
 }

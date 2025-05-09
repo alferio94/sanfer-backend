@@ -1,26 +1,39 @@
 import { Injectable } from '@nestjs/common';
 import { CreateEventUserDto } from './dto/create-event-user.dto';
-import { UpdateEventUserDto } from './dto/update-event-user.dto';
+import { EventUser } from './entities/event-user.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { hashPassword } from 'src/common/utils/hash.utils';
 
 @Injectable()
 export class EventUserService {
-  create(createEventUserDto: CreateEventUserDto) {
-    return 'This action adds a new eventUser';
+  constructor(
+    @InjectRepository(EventUser)
+    private readonly eventUserRepository: Repository<EventUser>,
+  ) {}
+
+  async createUserIfNotExists(createEventUserDto: CreateEventUserDto) {
+    const { email } = createEventUserDto;
+    const hashedPassword = await hashPassword('Sanfer2025');
+    const eventUser = await this.eventUserRepository.findOne({
+      where: { email },
+    });
+    if (!eventUser) {
+      const newEventUser = this.eventUserRepository.create({
+        ...createEventUserDto,
+        password: hashedPassword,
+      });
+      try {
+        await this.eventUserRepository.save(newEventUser);
+        return newEventUser;
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    return eventUser;
   }
 
   findAll() {
-    return `This action returns all eventUser`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} eventUser`;
-  }
-
-  update(id: number, updateEventUserDto: UpdateEventUserDto) {
-    return `This action updates a #${id} eventUser`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} eventUser`;
+    return this.eventUserRepository.find();
   }
 }

@@ -3,6 +3,9 @@ import { EventUserModule } from './event-user/event-user.module';
 import { EventModule } from './event/event.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { CommonModule } from './common/common.module';
+import { EventAgendaModule } from './event-agenda/event-agenda.module';
+import { EventGroupModule } from './event-group/event-group.module';
 
 @Module({
   imports: [
@@ -19,6 +22,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     }),
     EventUserModule,
     EventModule,
+    CommonModule,
+    EventAgendaModule,
+    EventGroupModule,
   ],
 })
 export class AppModule {}

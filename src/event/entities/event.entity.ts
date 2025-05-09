@@ -1,6 +1,7 @@
-import { EventGroup } from 'src/commons/models/event-group.model';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { EventUserAssignment } from './event-user-assignment.entity';
+import { EventAgenda } from 'src/event-agenda/entities/event-agenda.entity';
+import { EventGroup } from 'src/event-group/entities/event-group.entity';
 
 @Entity({ name: 'events' })
 export class AppEvent {
@@ -11,19 +12,16 @@ export class AppEvent {
   name: string;
 
   @Column({ nullable: true })
-  campus: string;
+  campus?: string;
 
   @Column({ nullable: true })
-  campusPhone: string;
+  campusPhone?: string;
 
   @Column({ nullable: true })
-  campusMap: string;
+  campusMap?: string;
 
   @Column({ nullable: true })
-  dressCode: string;
-
-  @Column('jsonb', { default: [] })
-  groups: EventGroup[];
+  dressCode?: string;
 
   @Column({ type: 'timestamp' })
   startDate: Date;
@@ -32,20 +30,26 @@ export class AppEvent {
   endDate: Date;
 
   @Column({ nullable: true })
-  tips: string;
+  tips?: string;
 
   @Column({ nullable: true })
-  extra: string;
+  extra?: string;
 
   @Column({ nullable: true })
-  banner: string;
+  banner?: string;
 
   @Column({ nullable: true })
-  campusImage: string;
+  campusImage?: string;
 
   @Column({ nullable: true })
-  dressCodeImage: string;
+  dressCodeImage?: string;
+
+  @OneToMany(() => EventGroup, (group) => group.event, { cascade: true })
+  groups: EventGroup[];
 
   @OneToMany(() => EventUserAssignment, (assignment) => assignment.event)
-  assignments?: EventUserAssignment[];
+  users?: EventUserAssignment[];
+
+  @OneToMany(() => EventAgenda, (agenda) => agenda.event)
+  agendas?: EventAgenda[];
 }
