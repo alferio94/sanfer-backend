@@ -10,8 +10,8 @@
 - [x] Crear Usuarios y asignarlos a eventos y a grupos (por evento)
 - [x] Obtener Grupos por usuario y evento
 - [x] Crear Grupo en evento
-- [ ] Crear Ponentes
 - [ ] Crear Agendas
+- [ ] Crear Ponentes
 - [ ] Crear Hoteles
 - [ ] Crear Código de vestimenta
 - [ ] Obtener Agendas

@@ -36,7 +36,6 @@ export class EventController {
     @Param('id', ParseUUIDPipe) id: string,
     @Param('user', ParseUUIDPipe) user: string,
   ) {
-    console.log(id, user);
     return this.eventService.findAssignments(id, user);
   }
 
