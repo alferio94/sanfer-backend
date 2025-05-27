@@ -3,9 +3,10 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
+  ParseUUIDPipe,
+  Put,
 } from '@nestjs/common';
 import { EventAgendaService } from './event-agenda.service';
 import { CreateEventAgendumDto } from './dto/create-event-agendum.dto';
@@ -13,33 +14,33 @@ import { UpdateEventAgendumDto } from './dto/update-event-agendum.dto';
 
 @Controller('event-agenda')
 export class EventAgendaController {
-  constructor(private readonly eventAgendaService: EventAgendaService) {}
+  constructor(private readonly agendaService: EventAgendaService) {}
 
   @Post()
-  create(@Body() createEventAgendumDto: CreateEventAgendumDto) {
-    return this.eventAgendaService.create(createEventAgendumDto);
+  create(@Body() dto: CreateEventAgendumDto) {
+    return this.agendaService.create(dto);
   }
 
   @Get()
   findAll() {
-    return this.eventAgendaService.findAll();
+    return this.agendaService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.eventAgendaService.findOne(+id);
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
+    return this.agendaService.findOne(id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   update(
-    @Param('id') id: string,
-    @Body() updateEventAgendumDto: UpdateEventAgendumDto,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateEventAgendumDto,
   ) {
-    return this.eventAgendaService.update(+id, updateEventAgendumDto);
+    return this.agendaService.update(id, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.eventAgendaService.remove(+id);
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    return this.agendaService.remove(id);
   }
 }

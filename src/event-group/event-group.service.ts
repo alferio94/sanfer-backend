@@ -21,10 +21,10 @@ export class EventGroupService {
       relations: ['groups'],
     });
     if (!event) throw new BadRequestException('Event not found');
-    const existingGroip = event.groups.find(
+    const existingGroup = event.groups.find(
       (g) => g.name === createEventGroupDto.name,
     );
-    if (existingGroip) throw new BadRequestException('Group already exists');
+    if (existingGroup) throw new BadRequestException('Group already exists');
     const newGroup = this.eventGroupRepository.create({
       ...createEventGroupDto,
       event,
@@ -36,20 +36,18 @@ export class EventGroupService {
       handleDBError(error);
     }
   }
-
-  findAll() {
-    return `This action returns all eventGroup`;
+  async findGroupsByEventId(eventId: string): Promise<EventGroup[]> {
+    return this.eventGroupRepository.find({
+      where: {
+        event: {
+          id: eventId,
+        },
+      },
+      relations: ['event'], // Puedes omitirlo si no necesitas el evento cargado
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} eventGroup`;
-  }
-
-  update(id: number, updateEventGroupDto: UpdateEventGroupDto) {
-    return `This action updates a #${id} eventGroup`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} eventGroup`;
+  async remove(id: string) {
+    await this.eventGroupRepository.delete(id);
   }
 }

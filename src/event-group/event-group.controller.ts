@@ -3,14 +3,12 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { EventGroupService } from './event-group.service';
 import { CreateEventGroupDto } from './dto/create-event-group.dto';
-import { UpdateEventGroupDto } from './dto/update-event-group.dto';
 
 @Controller('event-group')
 export class EventGroupController {
@@ -25,26 +23,13 @@ export class EventGroupController {
     return this.eventGroupService.create(id, createEventGroupDto);
   }
 
-  @Get()
-  findAll() {
-    return this.eventGroupService.findAll();
-  }
-
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.eventGroupService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateEventGroupDto: UpdateEventGroupDto,
-  ) {
-    return this.eventGroupService.update(+id, updateEventGroupDto);
+  findByEventId(@Param('id') id: string) {
+    return this.eventGroupService.findGroupsByEventId(id);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.eventGroupService.remove(+id);
+    return this.eventGroupService.remove(id);
   }
 }
