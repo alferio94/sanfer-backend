@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateEventGroupDto } from './dto/create-event-group.dto';
 import { UpdateEventGroupDto } from './dto/update-event-group.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -15,39 +19,114 @@ export class EventGroupService {
     @InjectRepository(AppEvent)
     private readonly appEventRepository: Repository<AppEvent>,
   ) {}
-  async create(id: string, createEventGroupDto: CreateEventGroupDto) {
+
+  async create(
+    eventId: string,
+    createEventGroupDto: CreateEventGroupDto,
+  ): Promise<EventGroup> {
     const event = await this.appEventRepository.findOne({
-      where: { id },
+      where: { id: eventId },
       relations: ['groups'],
     });
-    if (!event) throw new BadRequestException('Event not found');
+
+    if (!event) {
+      throw new NotFoundException(`Event with ID ${eventId} not found`);
+    }
+
+    // Verificar que no existe un grupo con el mismo nombre en este evento
     const existingGroup = event.groups.find(
-      (g) => g.name === createEventGroupDto.name,
+      (g) => g.name.toLowerCase() === createEventGroupDto.name.toLowerCase(),
     );
-    if (existingGroup) throw new BadRequestException('Group already exists');
+
+    if (existingGroup) {
+      throw new BadRequestException(
+        `Group with name '${createEventGroupDto.name}' already exists in this event`,
+      );
+    }
+
     const newGroup = this.eventGroupRepository.create({
       ...createEventGroupDto,
       event,
     });
+
     try {
-      await this.eventGroupRepository.save(newGroup);
-      return newGroup;
+      return await this.eventGroupRepository.save(newGroup);
     } catch (error) {
       handleDBError(error);
+      throw error;
     }
   }
+
   async findGroupsByEventId(eventId: string): Promise<EventGroup[]> {
-    return this.eventGroupRepository.find({
+    // Verificar que el evento existe
+    const event = await this.appEventRepository.findOne({
+      where: { id: eventId },
+    });
+
+    if (!event) {
+      throw new NotFoundException(`Event with ID ${eventId} not found`);
+    }
+
+    return await this.eventGroupRepository.find({
       where: {
-        event: {
-          id: eventId,
-        },
+        event: { id: eventId },
       },
-      relations: ['event'], // Puedes omitirlo si no necesitas el evento cargado
+      relations: ['event'],
+      order: { name: 'ASC' },
     });
   }
 
-  async remove(id: string) {
-    await this.eventGroupRepository.delete(id);
+  async findOne(id: string): Promise<EventGroup> {
+    const group = await this.eventGroupRepository.findOne({
+      where: { id },
+      relations: ['event', 'activities', 'assignments'],
+    });
+
+    if (!group) {
+      throw new NotFoundException(`Group with ID ${id} not found`);
+    }
+
+    return group;
+  }
+
+  async update(
+    id: string,
+    updateEventGroupDto: UpdateEventGroupDto,
+  ): Promise<EventGroup> {
+    try {
+      const group = await this.findOne(id); // Esto ya verifica que existe
+
+      // Si se está actualizando el nombre, verificar que no exista otro con el mismo nombre
+      if (updateEventGroupDto.name && updateEventGroupDto.name !== group.name) {
+        const event = await this.appEventRepository.findOne({
+          where: { id: group.event.id },
+          relations: ['groups'],
+        });
+
+        const existingGroup = event?.groups.find(
+          (g) =>
+            g.id !== id &&
+            g.name.toLowerCase() === updateEventGroupDto.name?.toLowerCase(),
+        );
+
+        if (existingGroup) {
+          throw new BadRequestException(
+            `Group with name '${updateEventGroupDto.name}' already exists in this event`,
+          );
+        }
+      }
+
+      Object.assign(group, updateEventGroupDto);
+
+      return await this.eventGroupRepository.save(group);
+    } catch (error) {
+      handleDBError(error);
+      throw error;
+    }
+  }
+
+  async remove(id: string): Promise<void> {
+    const group = await this.findOne(id); // Esto ya verifica que existe
+    await this.eventGroupRepository.remove(group);
   }
 }

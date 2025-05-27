@@ -5,9 +5,12 @@ import {
   Body,
   Param,
   ParseUUIDPipe,
+  Put,
+  Delete,
 } from '@nestjs/common';
 import { EventService } from './event.service';
 import { CreateEventDto } from './dto/create-event.dto';
+import { UpdateEventDto } from './dto/update-event.dto';
 import { CreateEventUserDto } from 'src/event-user/dto/create-event-user.dto';
 
 @Controller('event')
@@ -31,8 +34,9 @@ export class EventController {
   findAll() {
     return this.eventService.findAll();
   }
+
   @Get(':id/assignments/:user')
-  findAssigments(
+  findAssignments(
     @Param('id', ParseUUIDPipe) id: string,
     @Param('user', ParseUUIDPipe) user: string,
   ) {
@@ -40,7 +44,20 @@ export class EventController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.eventService.findOne(+id);
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
+    return this.eventService.findOne(id);
+  }
+
+  @Put(':id')
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateEventDto: UpdateEventDto,
+  ) {
+    return this.eventService.update(id, updateEventDto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    return this.eventService.remove(id);
   }
 }

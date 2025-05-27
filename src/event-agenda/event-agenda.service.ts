@@ -1,8 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateEventAgendumDto } from './dto/create-event-agendum.dto';
 import { UpdateEventAgendumDto } from './dto/update-event-agendum.dto';
 import { EventAgenda } from './entities/event-agenda.entity';
@@ -10,6 +6,7 @@ import { In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AppEvent } from 'src/event/entities/event.entity';
 import { EventGroup } from 'src/event-group/entities/event-group.entity';
+import { handleDBError } from 'src/common/utils/dbError.utils';
 
 @Injectable()
 export class EventAgendaService {
@@ -25,62 +22,135 @@ export class EventAgendaService {
   ) {}
 
   async create(dto: CreateEventAgendumDto): Promise<EventAgenda> {
-    const event = await this.eventRepo.findOneByOrFail({ id: dto.eventId });
+    try {
+      // Verificar que el evento existe
+      const event = await this.eventRepo.findOne({
+        where: { id: dto.eventId },
+      });
 
-    const groups = await this.groupRepo.find({
-      where: { id: In(dto.groupIds) },
-    });
+      if (!event) {
+        throw new NotFoundException(`Event with ID ${dto.eventId} not found`);
+      }
 
-    const agenda = this.agendaRepo.create({
-      ...dto,
-      startDate: new Date(dto.startDate),
-      endDate: new Date(dto.endDate),
-      event,
-      groups,
-    });
+      // Verificar que todos los grupos existen
+      const groups = await this.groupRepo.find({
+        where: { id: In(dto.groupIds) },
+      });
 
-    return this.agendaRepo.save(agenda);
+      if (groups.length !== dto.groupIds.length) {
+        const foundGroupIds = groups.map((group) => group.id);
+        const missingGroupIds = dto.groupIds.filter(
+          (id) => !foundGroupIds.includes(id),
+        );
+        throw new NotFoundException(
+          `Groups with IDs ${missingGroupIds.join(', ')} not found`,
+        );
+      }
+
+      // Crear la agenda
+      const agenda = this.agendaRepo.create({
+        title: dto.title,
+        description: dto.description,
+        location: dto.location,
+        startDate: new Date(dto.startDate),
+        endDate: new Date(dto.endDate),
+        event,
+        groups,
+      });
+
+      return await this.agendaRepo.save(agenda);
+    } catch (error) {
+      handleDBError(error);
+      throw error;
+    }
   }
 
-  findAll(): Promise<EventAgenda[]> {
-    return this.agendaRepo.find({
+  async findAll(): Promise<EventAgenda[]> {
+    return await this.agendaRepo.find({
       relations: ['event', 'groups'],
       order: { startDate: 'ASC' },
     });
   }
 
-  findOne(id: string): Promise<EventAgenda> {
-    return this.agendaRepo.findOneOrFail({
+  async findOne(id: string): Promise<EventAgenda> {
+    const agenda = await this.agendaRepo.findOne({
       where: { id },
       relations: ['event', 'groups'],
     });
+
+    if (!agenda) {
+      throw new NotFoundException(`Agenda with ID ${id} not found`);
+    }
+
+    return agenda;
   }
 
   async update(id: string, dto: UpdateEventAgendumDto): Promise<EventAgenda> {
-    const agenda = await this.findOne(id);
+    try {
+      const agenda = await this.findOne(id);
 
-    if (dto.eventId) {
-      agenda.event = await this.eventRepo.findOneByOrFail({ id: dto.eventId });
+      // Si se proporciona un nuevo eventId, verificar que existe
+      if (dto.eventId && dto.eventId !== agenda.event.id) {
+        const event = await this.eventRepo.findOne({
+          where: { id: dto.eventId },
+        });
+
+        if (!event) {
+          throw new NotFoundException(`Event with ID ${dto.eventId} not found`);
+        }
+
+        agenda.event = event;
+      }
+
+      // Si se proporcionan nuevos groupIds, verificar que existen
+      if (dto.groupIds) {
+        const groups = await this.groupRepo.find({
+          where: { id: In(dto.groupIds) },
+        });
+
+        if (groups.length !== dto.groupIds.length) {
+          const foundGroupIds = groups.map((group) => group.id);
+          const missingGroupIds = dto.groupIds.filter(
+            (id) => !foundGroupIds.includes(id),
+          );
+          throw new NotFoundException(
+            `Groups with IDs ${missingGroupIds.join(', ')} not found`,
+          );
+        }
+
+        agenda.groups = groups;
+      }
+
+      // Actualizar campos opcionales solo si se proporcionan
+      if (dto.title !== undefined) {
+        agenda.title = dto.title;
+      }
+
+      if (dto.description !== undefined) {
+        agenda.description = dto.description;
+      }
+
+      if (dto.location !== undefined) {
+        agenda.location = dto.location;
+      }
+
+      if (dto.startDate !== undefined) {
+        agenda.startDate = new Date(dto.startDate);
+      }
+
+      if (dto.endDate !== undefined) {
+        agenda.endDate = new Date(dto.endDate);
+      }
+
+      return await this.agendaRepo.save(agenda);
+    } catch (error) {
+      handleDBError(error);
+      throw error; // Re-throw si handleDBError no lanza excepción
     }
-
-    if (dto.groupIds) {
-      agenda.groups = await this.groupRepo.find({
-        where: { id: In(dto.groupIds) },
-      });
-    }
-
-    Object.assign(agenda, {
-      title: dto.title ?? agenda.title,
-      description: dto.description ?? agenda.description,
-      location: dto.location ?? agenda.location,
-      startDate: dto.startDate ? new Date(dto.startDate) : agenda.startDate,
-      endDate: dto.endDate ? new Date(dto.endDate) : agenda.endDate,
-    });
-
-    return this.agendaRepo.save(agenda);
   }
 
   async remove(id: string): Promise<void> {
-    await this.agendaRepo.delete(id);
+    const agenda = await this.findOne(id); // Esto ya verifica que existe
+    await this.agendaRepo.remove(agenda);
   }
 }
