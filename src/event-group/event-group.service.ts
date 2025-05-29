@@ -79,7 +79,7 @@ export class EventGroupService {
   async findOne(id: string): Promise<EventGroup> {
     const group = await this.eventGroupRepository.findOne({
       where: { id },
-      relations: ['event', 'activities', 'assignments'],
+      relations: ['event'],
     });
 
     if (!group) {
