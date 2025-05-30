@@ -1,4 +1,11 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+} from '@nestjs/common';
 import { EventUserService } from './event-user.service';
 import { CreateEventUserDto } from './dto/create-event-user.dto';
 
@@ -12,5 +19,9 @@ export class EventUserController {
   @Get()
   findAll() {
     return this.eventUserService.findAll();
+  }
+  @Get(':eventId')
+  findByEventId(@Param('eventId', ParseUUIDPipe) eventId: string) {
+    return this.eventUserService.findUsersByEventId(eventId);
   }
 }

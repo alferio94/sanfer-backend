@@ -59,12 +59,12 @@ export class EventService {
 
       // Normalizar nombres de grupos a lowercase
       const groupNamesLower = (userData.groups || []).map((g) =>
-        g.toLowerCase(),
+        g.toLowerCase().trim(),
       );
 
       // Buscar grupos existentes en el evento que coincidan
       const matchedGroups = event.groups.filter((group) =>
-        groupNamesLower.includes(group.name.toLowerCase()),
+        groupNamesLower.includes(group.name.toLowerCase().trim()),
       );
 
       if (!assignment) {

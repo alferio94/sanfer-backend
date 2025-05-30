@@ -5,7 +5,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { hashPassword } from 'src/common/utils/hash.utils';
 import { handleDBError } from 'src/common/utils/dbError.utils';
-
+import { EventUserAssignment } from 'src/event/entities/event-user-assignment.entity';
+import { EventGroup } from 'src/common/models/event-group.model';
+interface EventUserWithGroups extends Omit<EventUser, 'password'> {
+  assignedGroups: EventGroup[];
+}
 @Injectable()
 export class EventUserService {
   private readonly logger = new Logger(EventUserService.name);
@@ -13,6 +17,8 @@ export class EventUserService {
   constructor(
     @InjectRepository(EventUser)
     private readonly eventUserRepository: Repository<EventUser>,
+    @InjectRepository(EventUserAssignment)
+    private readonly eventUserAssignmentRepository: Repository<EventUserAssignment>,
   ) {}
 
   async createUserIfNotExists(
@@ -71,6 +77,20 @@ export class EventUserService {
     return await this.eventUserRepository.findOne({
       where: { email },
       relations: ['events', 'events.event', 'events.groups'],
+    });
+  }
+
+  async findUsersByEventId(eventId: string): Promise<EventUser[]> {
+    const assignments = await this.eventUserAssignmentRepository.find({
+      where: { event: { id: eventId } },
+      relations: ['user', 'groups'], // ← Agregar 'groups'
+    });
+
+    return assignments.map((assignment) => {
+      return {
+        ...assignment.user,
+        assignedGroups: assignment.groups, // ← Agregar grupos asignados
+      };
     });
   }
 }

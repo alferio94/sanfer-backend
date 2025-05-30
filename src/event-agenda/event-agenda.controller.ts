@@ -21,6 +21,11 @@ export class EventAgendaController {
     return this.agendaService.create(dto);
   }
 
+  @Get(':eventId')
+  findByEventId(@Param('eventId', ParseUUIDPipe) eventId: string) {
+    return this.agendaService.findAgendaByEventId(eventId);
+  }
+
   @Get()
   findAll() {
     return this.agendaService.findAll();

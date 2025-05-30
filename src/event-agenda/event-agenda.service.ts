@@ -148,6 +148,13 @@ export class EventAgendaService {
       throw error; // Re-throw si handleDBError no lanza excepción
     }
   }
+  async findAgendaByEventId(eventId: string) {
+    return await this.agendaRepo.find({
+      where: { event: { id: eventId } },
+      relations: ['event', 'groups'],
+      order: { startDate: 'ASC' },
+    });
+  }
 
   async remove(id: string): Promise<void> {
     const agenda = await this.findOne(id); // Esto ya verifica que existe
