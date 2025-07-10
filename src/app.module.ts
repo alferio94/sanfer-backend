@@ -12,6 +12,7 @@ import { SurveyModule } from './survey/survey.module';
 import { SurveyQuestionModule } from './survey-question/survey-question.module';
 import { SurveyResponseModule } from './survey-response/survey-response.module';
 import { SurveyAnswerModule } from './survey-answer/survey-answer.module';
+import { EventTransportModule } from './event-transport/event-transport.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { SurveyAnswerModule } from './survey-answer/survey-answer.module';
     SurveyQuestionModule,
     SurveyResponseModule,
     SurveyAnswerModule,
+    EventTransportModule,
   ],
 })
 export class AppModule {}

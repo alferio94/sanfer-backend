@@ -15,6 +15,7 @@
 - [x] ✅ Crear Encuestas (Entrada/Salida) con preguntas
 - [x] ✅ Sistema completo de encuestas y respuestas con métricas
 - [x] ✅ Crear y gestionar agenda de eventos
+- [x] ✅ Crear y gestionar transportes para eventos
 - [ ] 🔄 Crear Código de vestimenta
 - [ ] 🔄 Obtener Agenda Mobile optimizada
 - [ ] 🔄 Obtener Eventos por usuario con filtros
@@ -62,6 +63,7 @@ http://localhost:3000/api
 - [👥 Users & Assignments](#-users--assignments)
 - [🏷️ Groups Management](#%EF%B8%8F-groups-management)
 - [📅 Event Agenda](#-event-agenda)
+- [🚌 Event Transport](#-event-transport)
 - [🎤 Speakers Management](#-speakers-management)
 - [🏨 Hotels Management](#-hotels-management)
 - [📊 Survey System](#-survey-system)
@@ -161,7 +163,8 @@ Retrieves all events with complete related data (users, groups, agenda, speakers
     "agendas": [...],
     "speakers": [...],
     "hotels": [...],
-    "surveys": [...]
+    "surveys": [...],
+    "transports": [...]
   }
 ]
 ```
@@ -454,6 +457,114 @@ Returns chronologically ordered agenda for a specific event.
 ### Delete Agenda Item
 
 **DELETE** `/event-agenda/{agendaId}`
+
+---
+
+## 🚌 Event Transport
+
+Manage transportation options for event participants with specific group targeting.
+
+### Create Transport
+
+**POST** `/event-transport`
+
+Creates a transportation option for specific groups within an event.
+
+**Request Example:**
+
+```json
+{
+  "name": "Autobús al Aeropuerto",
+  "details": "Servicio de traslado exclusivo desde el hotel hasta el Aeropuerto Internacional",
+  "mapUrl": "https://maps.google.com/route-to-airport",
+  "type": "bus",
+  "departureTime": "2025-07-17T14:00:00Z",
+  "eventId": "550e8400-e29b-41d4-a716-446655440000",
+  "groupIds": [
+    "660f9500-f30c-52e5-b827-557766551111",
+    "770fa611-040d-63f6-c938-668877662222"
+  ]
+}
+```
+
+**Types of Transport Available:**
+
+- `airplane`: Avión
+- `bus`: Autobús
+- `train`: Tren
+- `van`: Van o Minibus
+- `boat`: Barco
+
+**Response Example:**
+
+```json
+{
+  "id": "cc2he166-595i-b8k1-he8d-abcdef123456",
+  "name": "Autobús al Aeropuerto",
+  "details": "Servicio de traslado exclusivo desde el hotel hasta el Aeropuerto Internacional",
+  "mapUrl": "https://maps.google.com/route-to-airport",
+  "type": "bus",
+  "departureTime": "2025-07-17T14:00:00.000Z",
+  "event": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "Tech Innovation Summit 2025"
+  },
+  "groups": [
+    {
+      "id": "660f9500-f30c-52e5-b827-557766551111",
+      "name": "VIP Speakers",
+      "color": "#FF6B35"
+    },
+    {
+      "id": "770fa611-040d-63f6-c938-668877662222",
+      "name": "Attendees",
+      "color": "#4ECDC4"
+    }
+  ]
+}
+```
+
+### Get All Transports
+
+**GET** `/event-transport`
+
+Returns all transport options across all events, ordered by departure time.
+
+### Get Transports by Event
+
+**GET** `/event-transport/event/{eventId}`
+
+**Example:** `GET /event-transport/event/550e8400-e29b-41d4-a716-446655440000`
+
+Returns chronologically ordered transport options for a specific event.
+
+### Get Transport Details
+
+**GET** `/event-transport/{id}`
+
+Returns detailed information about a specific transport option.
+
+### Update Transport
+
+**PUT** `/event-transport/{id}`
+
+Updates an existing transport option. All fields are optional.
+
+**Example Request:**
+
+```json
+{
+  "name": "Autobús VIP al Aeropuerto",
+  "departureTime": "2025-07-17T15:30:00Z",
+  "groupIds": ["660f9500-f30c-52e5-b827-557766551111"]
+}
+```
+
+### Delete Transport
+
+**DELETE** `/event-transport/{id}`
+
+Removes a transport option and its associations with groups.
 
 ---
 
@@ -1110,7 +1221,18 @@ POST /hotel
   "eventId": "{eventId}"
 }
 
-# 5. Create Survey with Questions
+# 5. Create Transport Options
+POST /event-transport
+{
+  "name": "Airport Shuttle",
+  "details": "Complimentary service from airport to conference venue",
+  "type": "bus",
+  "departureTime": "2025-08-01T07:00:00Z",
+  "eventId": "{eventId}",
+  "groupIds": ["{speakersGroupId}"]
+}
+
+# 6. Create Survey with Questions
 POST /survey/with-questions
 {
   "title": "Entry Survey",
@@ -1126,7 +1248,7 @@ POST /survey/with-questions
   ]
 }
 
-# 6. Create Agenda Items
+# 7. Create Agenda Items
 POST /event-agenda
 {
   "title": "Opening Keynote",
@@ -1136,7 +1258,7 @@ POST /event-agenda
   "groupIds": ["{speakersGroupId}", "{attendeesGroupId}"]
 }
 
-# 7. Assign Users to Event
+# 8. Assign Users to Event
 POST /event/assignment/{eventId}
 [
   {
@@ -1177,6 +1299,40 @@ POST /survey-response/submit
 }
 ```
 
+### Transportation Management Workflow
+
+```bash
+# 1. Create transport options for different groups
+POST /event-transport
+{
+  "name": "VIP Airport Pickup",
+  "details": "Luxury service for speakers",
+  "type": "van",
+  "departureTime": "2025-08-01T06:30:00Z",
+  "eventId": "{eventId}",
+  "groupIds": ["{speakersGroupId}"]
+}
+
+POST /event-transport
+{
+  "name": "Shuttle to Conference Venue",
+  "type": "bus",
+  "departureTime": "2025-08-01T08:00:00Z",
+  "eventId": "{eventId}",
+  "groupIds": ["{attendeesGroupId}"]
+}
+
+# 2. Get all transports for an event
+GET /event-transport/event/{eventId}
+
+# 3. Update transport details
+PUT /event-transport/{transportId}
+{
+  "departureTime": "2025-08-01T07:00:00Z",
+  "details": "Updated pickup information: Look for staff with event signage"
+}
+```
+
 ### Dashboard Analytics Workflow
 
 ```bash
@@ -1197,6 +1353,9 @@ GET /speaker/event/{eventId}
 
 # 6. Get event hotels
 GET /hotel/event/{eventId}
+
+# 7. Get event transports
+GET /event-transport/event/{eventId}
 ```
 
 ---
@@ -1210,6 +1369,14 @@ GET /hotel/event/{eventId}
 3. **Check user responses** before showing surveys in mobile apps
 4. **Use survey metrics** for real-time dashboard updates
 5. **Implement proper error handling** for better UX
+
+### Transport Management Best Practices
+
+1. **Create specific transports for different groups** to better manage logistics
+2. **Provide detailed instructions** in the details field
+3. **Include map URLs** for complex pickup/dropoff locations
+4. **Use accurate departure times** with timezone considerations
+5. **Update transport information** as logistics change
 
 ### Performance Considerations
 
@@ -1226,6 +1393,7 @@ The API is designed for seamless mobile app integration:
 - **User verification** endpoints to prevent duplicate submissions
 - **Complete data responses** to minimize API calls
 - **Standardized error formats** for consistent error handling
+- **Group-based filtering** for showing relevant transports to users
 
 ---
 
@@ -1242,10 +1410,11 @@ The API is designed for seamless mobile app integration:
 ## 📱 Database Schema Overview
 
 ```
-Events (1:many) → Groups, Users (via assignments), Agenda, Speakers, Hotels, Surveys
-├── Groups (many:many) → Users (via assignments), Agenda items
+Events (1:many) → Groups, Users (via assignments), Agenda, Speakers, Hotels, Surveys, Transports
+├── Groups (many:many) → Users (via assignments), Agenda items, Transports
 ├── Users (many:many) → Events (via assignments), Survey responses
 ├── Agenda (many:many) → Groups
+├── Transports (many:many) → Groups
 ├── Speakers (many:one) → Events
 ├── Hotels (many:one) → Events
 └── Surveys (1:many) → Questions, Responses
@@ -1357,6 +1526,7 @@ Also available for Insomnia users:
 - [x] Speaker profiles
 - [x] Hotel information
 - [x] Complete survey system
+- [x] Transport management
 
 ### Phase 2 - Enhanced Features 🔄
 

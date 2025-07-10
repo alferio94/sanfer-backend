@@ -5,6 +5,7 @@ import { EventGroup } from 'src/event-group/entities/event-group.entity';
 import { Speaker } from 'src/event-speakers/entities/speakers.entity';
 import { Hotel } from 'src/event-hotel/entities/hotel.entity';
 import { Survey } from 'src/survey/entities/survey.entity';
+import { EventTransport } from 'src/event-transport/entities/event-transport.entity';
 
 @Entity({ name: 'events' })
 export class AppEvent {
@@ -64,4 +65,8 @@ export class AppEvent {
 
   @OneToMany(() => Survey, (survey) => survey.event, { cascade: true })
   surveys?: Survey[];
+  @OneToMany(() => EventTransport, (transport) => transport.event, {
+    cascade: true,
+  })
+  transports?: EventTransport[];
 }
