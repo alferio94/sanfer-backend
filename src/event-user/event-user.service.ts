@@ -6,10 +6,6 @@ import { Repository } from 'typeorm';
 import { hashPassword } from 'src/common/utils/hash.utils';
 import { handleDBError } from 'src/common/utils/dbError.utils';
 import { EventUserAssignment } from 'src/event/entities/event-user-assignment.entity';
-import { EventGroup } from 'src/common/models/event-group.model';
-interface EventUserWithGroups extends Omit<EventUser, 'password'> {
-  assignedGroups: EventGroup[];
-}
 @Injectable()
 export class EventUserService {
   private readonly logger = new Logger(EventUserService.name);

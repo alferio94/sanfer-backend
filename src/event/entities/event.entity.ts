@@ -2,6 +2,9 @@ import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { EventUserAssignment } from './event-user-assignment.entity';
 import { EventAgenda } from 'src/event-agenda/entities/event-agenda.entity';
 import { EventGroup } from 'src/event-group/entities/event-group.entity';
+import { Speaker } from 'src/event-speakers/entities/speakers.entity';
+import { Hotel } from 'src/event-hotel/entities/hotel.entity';
+import { Survey } from 'src/survey/entities/survey.entity';
 
 @Entity({ name: 'events' })
 export class AppEvent {
@@ -52,4 +55,13 @@ export class AppEvent {
 
   @OneToMany(() => EventAgenda, (agenda) => agenda.event)
   agendas?: EventAgenda[];
+
+  @OneToMany(() => Speaker, (speaker) => speaker.event, { cascade: true })
+  speakers?: Speaker[];
+
+  @OneToMany(() => Hotel, (hotel) => hotel.event, { cascade: true })
+  hotels?: Hotel[];
+
+  @OneToMany(() => Survey, (survey) => survey.event, { cascade: true })
+  surveys?: Survey[];
 }

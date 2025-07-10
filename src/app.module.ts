@@ -6,6 +6,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CommonModule } from './common/common.module';
 import { EventAgendaModule } from './event-agenda/event-agenda.module';
 import { EventGroupModule } from './event-group/event-group.module';
+import { SpeakersModule } from './event-speakers/speakers.module';
+import { HotelModule } from './event-hotel/hotel.module';
+import { SurveyModule } from './survey/survey.module';
+import { SurveyQuestionModule } from './survey-question/survey-question.module';
+import { SurveyResponseModule } from './survey-response/survey-response.module';
+import { SurveyAnswerModule } from './survey-answer/survey-answer.module';
 
 @Module({
   imports: [
@@ -25,6 +31,12 @@ import { EventGroupModule } from './event-group/event-group.module';
     CommonModule,
     EventAgendaModule,
     EventGroupModule,
+    SpeakersModule,
+    HotelModule,
+    SurveyModule,
+    SurveyQuestionModule,
+    SurveyResponseModule,
+    SurveyAnswerModule,
   ],
 })
 export class AppModule {}
