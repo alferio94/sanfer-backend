@@ -16,6 +16,7 @@
 - [x] ✅ Sistema completo de encuestas y respuestas con métricas
 - [x] ✅ Crear y gestionar agenda de eventos
 - [x] ✅ Crear y gestionar transportes para eventos
+- [x] ✅ Sistema de autenticación JWT para usuarios administradores
 - [ ] 🔄 Crear Código de vestimenta
 - [ ] 🔄 Obtener Agenda Mobile optimizada
 - [ ] 🔄 Obtener Eventos por usuario con filtros
@@ -60,6 +61,7 @@ http://localhost:3000/api
 ## 📋 Quick Navigation
 
 - [🎉 Events Management](#-events-management)
+- [🔐 Admin Authentication](#-admin-authentication)
 - [👥 Users & Assignments](#-users--assignments)
 - [🏷️ Groups Management](#%EF%B8%8F-groups-management)
 - [📅 Event Agenda](#-event-agenda)
@@ -236,6 +238,272 @@ Bulk assigns users to an event with optional group assignments. Users are create
 **GET** `/event/{eventId}/assignments/{userId}`
 
 Retrieves detailed assignment information for a specific user in an event.
+
+---
+
+## 🔐 Admin Authentication
+
+Sistema de autenticación JWT para usuarios administradores del dashboard con access tokens y refresh tokens.
+
+### Register Admin User
+
+**POST** `/usuarios/register`
+
+Crea un nuevo usuario administrador para acceder al dashboard.
+
+**Request Body:**
+
+```json
+{
+  "email": "admin@company.com",
+  "password": "SecurePassword123",
+  "nombre": "Juan",
+  "apellido": "Pérez",
+  "rol": "admin"
+}
+```
+
+**Response:**
+
+```json
+{
+  "message": "Usuario creado exitosamente",
+  "usuario": {
+    "id": "uuid-del-usuario",
+    "email": "admin@company.com",
+    "nombre": "Juan",
+    "apellido": "Pérez",
+    "rol": "admin",
+    "activo": true,
+    "createdAt": "2025-07-14T15:30:00.000Z",
+    "updatedAt": "2025-07-14T15:30:00.000Z"
+  }
+}
+```
+
+### Login
+
+**POST** `/usuarios/login`
+
+Inicia sesión y obtiene tokens de acceso y renovación.
+
+**Request Body:**
+
+```json
+{
+  "email": "admin@company.com",
+  "password": "SecurePassword123"
+}
+```
+
+**Response:**
+
+```json
+{
+  "message": "Login exitoso",
+  "usuario": {
+    "id": "uuid-del-usuario",
+    "email": "admin@company.com",
+    "nombre": "Juan",
+    "apellido": "Pérez",
+    "rol": "admin",
+    "activo": true,
+    "createdAt": "2025-07-14T15:30:00.000Z",
+    "updatedAt": "2025-07-14T15:30:00.000Z"
+  },
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"
+}
+```
+
+**Token Details:**
+- **Access Token**: Válido por 15 minutos, usado para autenticar requests
+- **Refresh Token**: Válido por 7 días, usado para renovar access tokens
+
+### Refresh Tokens
+
+**POST** `/usuarios/refresh`
+
+Renueva el access token usando el refresh token.
+
+**Request Body:**
+
+```json
+{
+  "refreshToken": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"
+}
+```
+
+**Response:**
+
+```json
+{
+  "message": "Tokens renovados exitosamente",
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "x1y2z3a4b5c6d7e8f9g0h1i2j3k4l5m6"
+}
+```
+
+### Logout
+
+**POST** `/usuarios/logout`
+
+Cierra sesión invalidando el refresh token.
+
+**Request Body:**
+
+```json
+{
+  "refreshToken": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"
+}
+```
+
+**Response:**
+
+```json
+{
+  "message": "Logout exitoso"
+}
+```
+
+### Protected Admin Endpoints
+
+Los siguientes endpoints requieren autenticación JWT:
+
+**Headers Required:**
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+#### Get All Admin Users
+
+**GET** `/usuarios`
+
+**🔒 Requires Authentication**
+
+```json
+{
+  "message": "Usuarios obtenidos exitosamente",
+  "usuarios": [
+    {
+      "id": "uuid-del-usuario",
+      "email": "admin@company.com",
+      "nombre": "Juan",
+      "apellido": "Pérez",
+      "rol": "admin",
+      "activo": true,
+      "createdAt": "2025-07-14T15:30:00.000Z",
+      "updatedAt": "2025-07-14T15:30:00.000Z"
+    }
+  ]
+}
+```
+
+#### Get Admin User by ID
+
+**GET** `/usuarios/{id}`
+
+**🔒 Requires Authentication**
+
+#### Update Admin User
+
+**PATCH** `/usuarios/{id}`
+
+**🔒 Requires Authentication**
+
+**Request Body:**
+```json
+{
+  "nombre": "Juan Carlos",
+  "email": "juan.carlos@company.com"
+}
+```
+
+#### Delete Admin User (Soft Delete)
+
+**DELETE** `/usuarios/{id}`
+
+**🔒 Requires Authentication**
+
+Desactiva el usuario (soft delete) en lugar de eliminarlo completamente.
+
+### Authentication Flow for Frontend
+
+```javascript
+// 1. Login
+const loginResponse = await fetch('/usuarios/login', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ email, password })
+});
+
+const { accessToken, refreshToken } = await loginResponse.json();
+
+// Store tokens securely
+localStorage.setItem('accessToken', accessToken);
+localStorage.setItem('refreshToken', refreshToken);
+
+// 2. Make authenticated requests
+const response = await fetch('/usuarios', {
+  headers: {
+    'Authorization': `Bearer ${accessToken}`,
+    'Content-Type': 'application/json'
+  }
+});
+
+// 3. Handle token expiration
+if (response.status === 401) {
+  // Refresh token
+  const refreshResponse = await fetch('/usuarios/refresh', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ 
+      refreshToken: localStorage.getItem('refreshToken') 
+    })
+  });
+  
+  if (refreshResponse.ok) {
+    const { accessToken: newAccessToken, refreshToken: newRefreshToken } = 
+      await refreshResponse.json();
+    
+    localStorage.setItem('accessToken', newAccessToken);
+    localStorage.setItem('refreshToken', newRefreshToken);
+    
+    // Retry original request
+  } else {
+    // Redirect to login
+    window.location.href = '/login';
+  }
+}
+
+// 4. Logout
+await fetch('/usuarios/logout', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ 
+    refreshToken: localStorage.getItem('refreshToken') 
+  })
+});
+
+localStorage.removeItem('accessToken');
+localStorage.removeItem('refreshToken');
+```
+
+### Environment Variables Required
+
+Add to your `.env` file:
+
+```env
+# JWT Configuration
+JWT_SECRET=your-super-secure-jwt-secret-key-here
+```
+
+**Security Notes:**
+- Access tokens expire in 15 minutes for security
+- Refresh tokens expire in 7 days
+- Refresh tokens are hashed in the database
+- Logout invalidates refresh tokens
+- All admin endpoints require valid JWT tokens
 
 ---
 
@@ -1437,6 +1705,9 @@ DB_USERNAME=postgres
 DB_PASSWORD=your_secure_password
 DB_NAME=sanfer_events
 
+# JWT Configuration
+JWT_SECRET=your-super-secure-jwt-secret-key-here
+
 # Application Configuration
 PORT=3000
 NODE_ENV=development
@@ -1530,7 +1801,7 @@ Also available for Insomnia users:
 
 ### Phase 2 - Enhanced Features 🔄
 
-- [ ] Authentication & authorization
+- [x] ✅ Authentication & authorization (JWT with refresh tokens)
 - [ ] File upload for images
 - [ ] Push notifications
 - [ ] Real-time updates via WebSockets

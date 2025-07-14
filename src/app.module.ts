@@ -13,6 +13,7 @@ import { SurveyQuestionModule } from './survey-question/survey-question.module';
 import { SurveyResponseModule } from './survey-response/survey-response.module';
 import { SurveyAnswerModule } from './survey-answer/survey-answer.module';
 import { EventTransportModule } from './event-transport/event-transport.module';
+import { UsuariosModule } from './usuarios/usuarios.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { EventTransportModule } from './event-transport/event-transport.module';
     SurveyResponseModule,
     SurveyAnswerModule,
     EventTransportModule,
+    UsuariosModule,
   ],
 })
 export class AppModule {}
