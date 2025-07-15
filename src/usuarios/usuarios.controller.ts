@@ -9,6 +9,7 @@ import {
   HttpStatus,
   HttpCode,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import { UsuariosService } from './usuarios.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
@@ -57,6 +58,22 @@ export class UsuariosController {
     await this.usuariosService.logout(refreshTokenDto);
     return {
       message: 'Logout exitoso',
+    };
+  }
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  async getMe(@Request() req) {
+    const { password, ...usuario } = req.user;
+    return {
+      id: usuario.id,
+      nombre: usuario.nombre,
+      apellido: usuario.apellido,
+      email: usuario.email,
+      rol: usuario.rol,
+      activo: usuario.activo,
+      fechaCreacion: usuario.createdAt,
+      fechaActualizacion: usuario.updatedAt,
     };
   }
 
