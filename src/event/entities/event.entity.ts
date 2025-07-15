@@ -1,4 +1,4 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { EventUserAssignment } from './event-user-assignment.entity';
 import { EventAgenda } from 'src/event-agenda/entities/event-agenda.entity';
 import { EventGroup } from 'src/event-group/entities/event-group.entity';
@@ -6,6 +6,7 @@ import { Speaker } from 'src/event-speakers/entities/speakers.entity';
 import { Hotel } from 'src/event-hotel/entities/hotel.entity';
 import { Survey } from 'src/survey/entities/survey.entity';
 import { EventTransport } from 'src/event-transport/entities/event-transport.entity';
+import { AppMenu } from 'src/app-menu/entities/app-menu.entity';
 
 @Entity({ name: 'events' })
 export class AppEvent {
@@ -69,4 +70,7 @@ export class AppEvent {
     cascade: true,
   })
   transports?: EventTransport[];
+
+  @OneToOne(() => AppMenu, (appMenu) => appMenu.event, { cascade: true })
+  appMenu?: AppMenu;
 }

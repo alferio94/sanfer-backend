@@ -94,7 +94,7 @@ export class EventService {
 
   async findAll(): Promise<AppEvent[]> {
     return await this.eventRepository.find({
-      relations: ['users', 'users.user', 'groups', 'agendas'],
+      relations: ['users', 'users.user', 'groups', 'agendas', 'appMenu'],
       order: { startDate: 'ASC' },
     });
   }
@@ -115,7 +115,7 @@ export class EventService {
   async findOne(id: string): Promise<AppEvent> {
     const event = await this.eventRepository.findOne({
       where: { id },
-      relations: ['users', 'users.user', 'groups', 'agendas'],
+      relations: ['users', 'users.user', 'groups', 'agendas', 'appMenu'],
     });
 
     if (!event) {
@@ -142,5 +142,16 @@ export class EventService {
   async remove(id: string): Promise<void> {
     const event = await this.findOne(id); // Esto ya verifica que existe
     await this.eventRepository.remove(event);
+  }
+
+  async findEventsByUserId(userId: string): Promise<AppEvent[]> {
+    const assignments = await this.eventUserAssignmentRepository.find({
+      where: {
+        user: { id: userId },
+      },
+      relations: ['event', 'event.groups', 'event.agendas', 'event.appMenu', 'groups'],
+    });
+
+    return assignments.map(assignment => assignment.event);
   }
 }

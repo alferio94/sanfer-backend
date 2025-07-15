@@ -7,11 +7,13 @@ import {
   ParseUUIDPipe,
   Put,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { EventService } from './event.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { CreateEventUserDto } from 'src/event-user/dto/create-event-user.dto';
+import { EventUserAuthGuard } from 'src/event-user/guards/event-user-auth.guard';
 
 @Controller('event')
 export class EventController {
@@ -41,6 +43,12 @@ export class EventController {
     @Param('user', ParseUUIDPipe) user: string,
   ) {
     return this.eventService.findAssignments(id, user);
+  }
+
+  @UseGuards(EventUserAuthGuard)
+  @Get('user/:userId')
+  findEventsByUser(@Param('userId', ParseUUIDPipe) userId: string) {
+    return this.eventService.findEventsByUserId(userId);
   }
 
   @Get(':id')

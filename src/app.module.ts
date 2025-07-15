@@ -14,6 +14,7 @@ import { SurveyResponseModule } from './survey-response/survey-response.module';
 import { SurveyAnswerModule } from './survey-answer/survey-answer.module';
 import { EventTransportModule } from './event-transport/event-transport.module';
 import { UsuariosModule } from './usuarios/usuarios.module';
+import { AppMenuModule } from './app-menu/app-menu.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { UsuariosModule } from './usuarios/usuarios.module';
     SurveyAnswerModule,
     EventTransportModule,
     UsuariosModule,
+    AppMenuModule,
   ],
 })
 export class AppModule {}

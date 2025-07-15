@@ -18,6 +18,9 @@ export class RefreshToken {
   @Column({ default: false })
   revoked: boolean;
 
+  @Column({ default: 'admin' })
+  userType: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

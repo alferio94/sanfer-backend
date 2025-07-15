@@ -17,9 +17,11 @@
 - [x] ✅ Crear y gestionar agenda de eventos
 - [x] ✅ Crear y gestionar transportes para eventos
 - [x] ✅ Sistema de autenticación JWT para usuarios administradores
+- [x] ✅ Sistema de autenticación JWT para usuarios de eventos (mobile app)
+- [x] ✅ Endpoint para obtener eventos por usuario
+- [x] ✅ Sistema de configuración de menú de app móvil
 - [ ] 🔄 Crear Código de vestimenta
 - [ ] 🔄 Obtener Agenda Mobile optimizada
-- [ ] 🔄 Obtener Eventos por usuario con filtros
 
 # Tech Stack
 
@@ -61,8 +63,11 @@ http://localhost:3000/api
 ## 📋 Quick Navigation
 
 - [🎉 Events Management](#-events-management)
+- [📱 Mobile App Endpoints](#-mobile-app-endpoints)
 - [🔐 Admin Authentication](#-admin-authentication)
+- [📱 Mobile App Authentication](#-mobile-app-authentication)
 - [👥 Users & Assignments](#-users--assignments)
+- [📋 App Menu Configuration](#-app-menu-configuration)
 - [🏷️ Groups Management](#%EF%B8%8F-groups-management)
 - [📅 Event Agenda](#-event-agenda)
 - [🚌 Event Transport](#-event-transport)
@@ -238,6 +243,212 @@ Bulk assigns users to an event with optional group assignments. Users are create
 **GET** `/event/{eventId}/assignments/{userId}`
 
 Retrieves detailed assignment information for a specific user in an event.
+
+### Get Events by User
+
+**GET** `/event/user/{userId}` 🔒
+
+**🔒 Requires Event User Authentication**
+
+Retrieves all events assigned to a specific event user.
+
+**Headers Required:**
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+**Example:** `GET /event/user/990fc833-262f-85h8-eb5a-88aa99884444`
+
+**Response Example:**
+
+```json
+[
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "Tech Innovation Summit 2025",
+    "campus": "Silicon Valley Convention Center",
+    "startDate": "2025-07-15T08:00:00.000Z",
+    "endDate": "2025-07-17T19:00:00.000Z",
+    "banner": "https://cdn.example.com/events/tech-summit-banner.jpg",
+    "groups": [
+      {
+        "id": "660f9500-f30c-52e5-b827-557766551111",
+        "name": "VIP Speakers",
+        "color": "#FF6B35"
+      }
+    ],
+    "agendas": [
+      {
+        "id": "cc2he166-595i-b8k1-he8d-bbddcc117777",
+        "title": "Opening Keynote",
+        "startDate": "2025-07-15T09:00:00.000Z",
+        "endDate": "2025-07-15T10:30:00.000Z",
+        "location": "Main Auditorium"
+      }
+    ]
+  }
+]
+```
+
+---
+
+## 📱 Mobile App Endpoints
+
+Endpoints específicamente diseñados para la aplicación móvil. Estos endpoints están optimizados para el consumo de datos en dispositivos móviles.
+
+### Event User Login
+
+**POST** `/event-user/login`
+
+Permite a los usuarios de eventos iniciar sesión en la aplicación móvil.
+
+**Request Body:**
+
+```json
+{
+  "email": "user@example.com",
+  "password": "Sanfer2025"
+}
+```
+
+**Response:**
+
+```json
+{
+  "message": "Login exitoso",
+  "user": {
+    "id": "990fc833-262f-85h8-eb5a-88aa99884444",
+    "name": "Alice Johnson",
+    "email": "user@example.com"
+  },
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"
+}
+```
+
+### Get User's Events
+
+**GET** `/event/user/{userId}` 🔒
+
+**🔒 Requires Event User Authentication**
+
+Obtiene todos los eventos asignados a un usuario específico con toda la información necesaria para la app móvil.
+
+**Headers Required:**
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+**Response Example:**
+
+```json
+[
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "Tech Innovation Summit 2025",
+    "campus": "Silicon Valley Convention Center",
+    "startDate": "2025-07-15T08:00:00.000Z",
+    "endDate": "2025-07-17T19:00:00.000Z",
+    "banner": "https://cdn.example.com/events/tech-summit-banner.jpg",
+    "groups": [...],
+    "agendas": [...],
+    "appMenu": {
+      "id": "menu-uuid",
+      "transporte": true,
+      "alimentos": true,
+      "codigoVestimenta": false,
+      "ponentes": true,
+      "encuestas": true,
+      "hotel": true,
+      "agenda": true,
+      "atencionMedica": false,
+      "sede": true
+    }
+  }
+]
+```
+
+### Get App Menu Configuration
+
+**GET** `/app-menu/event/{eventId}`
+
+Obtiene la configuración del menú de la app para un evento específico. Si no existe configuración, se crea automáticamente con todas las secciones habilitadas.
+
+**Response Example:**
+
+```json
+{
+  "message": "App menu obtenido exitosamente",
+  "appMenu": {
+    "id": "menu-uuid",
+    "eventId": "550e8400-e29b-41d4-a716-446655440000",
+    "transporte": true,
+    "alimentos": true,
+    "codigoVestimenta": true,
+    "ponentes": true,
+    "encuestas": true,
+    "hotel": true,
+    "agenda": true,
+    "atencionMedica": true,
+    "sede": true
+  }
+}
+```
+
+### Refresh Tokens
+
+**POST** `/event-user/refresh`
+
+Renueva los tokens de autenticación para mantener la sesión activa.
+
+**Request Body:**
+
+```json
+{
+  "refreshToken": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"
+}
+```
+
+### Submit Survey Response
+
+**POST** `/survey-response/submit`
+
+Endpoint optimizado para enviar respuestas de encuestas desde la app móvil.
+
+**Request Example:**
+
+```json
+{
+  "surveyId": "ff5kh499-8c8l-e1n4-kh1g-eeffff44aaaa",
+  "userId": "990fc833-262f-85h8-eb5a-88aa99884444",
+  "answers": [
+    {
+      "questionId": "gg6li5aa-9d9m-f2o5-li2h-ffgggg55bbbb",
+      "answerValue": "My response here"
+    },
+    {
+      "questionId": "hh7mj6bb-aean-g3p6-mj3i-gghhhh66cccc",
+      "selectedOption": "Software Developer"
+    }
+  ]
+}
+```
+
+### Check Survey Completion
+
+**GET** `/survey-response/check/{surveyId}/{userId}`
+
+Verifica si un usuario ya completó una encuesta específica.
+
+**Response:** `true` o `false`
+
+### Mobile App Integration Notes
+
+- **Token Duration**: Access tokens duran 7 días, refresh tokens 30 días
+- **Offline Support**: Los datos pueden ser cacheados localmente
+- **Menu Configuration**: La app debe respetar las secciones habilitadas/deshabilitadas
+- **Auto-refresh**: Implementar renovación automática de tokens
+- **Error Handling**: Manejar 401 para redirigir a login
 
 ---
 
@@ -504,6 +715,196 @@ JWT_SECRET=your-super-secure-jwt-secret-key-here
 - Refresh tokens are hashed in the database
 - Logout invalidates refresh tokens
 - All admin endpoints require valid JWT tokens
+
+---
+
+## 📱 Mobile App Authentication
+
+Sistema de autenticación JWT específicamente diseñado para usuarios de eventos que acceden a través de la aplicación móvil.
+
+### Event User Login
+
+**POST** `/event-user/login`
+
+Permite a los usuarios de eventos iniciar sesión con su email y contraseña predefinida.
+
+**Request Body:**
+
+```json
+{
+  "email": "user@example.com",
+  "password": "Sanfer2025"
+}
+```
+
+**Response:**
+
+```json
+{
+  "message": "Login exitoso",
+  "user": {
+    "id": "990fc833-262f-85h8-eb5a-88aa99884444",
+    "name": "Alice Johnson",
+    "email": "user@example.com"
+  },
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"
+}
+```
+
+**Token Details:**
+- **Access Token**: Válido por 7 días, usado para autenticar requests
+- **Refresh Token**: Válido por 30 días, usado para renovar access tokens
+
+### Refresh Event User Tokens
+
+**POST** `/event-user/refresh`
+
+Renueva el access token usando el refresh token.
+
+**Request Body:**
+
+```json
+{
+  "refreshToken": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"
+}
+```
+
+**Response:**
+
+```json
+{
+  "message": "Tokens renovados exitosamente",
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "x1y2z3a4b5c6d7e8f9g0h1i2j3k4l5m6"
+}
+```
+
+### Event User Logout
+
+**POST** `/event-user/logout`
+
+Cierra sesión invalidando el refresh token.
+
+**Request Body:**
+
+```json
+{
+  "refreshToken": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"
+}
+```
+
+**Response:**
+
+```json
+{
+  "message": "Logout exitoso"
+}
+```
+
+### Protected Mobile Endpoints
+
+Los siguientes endpoints requieren autenticación de usuario de evento:
+
+**Headers Required:**
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+#### Get User's Events
+
+**GET** `/event/user/{userId}` 🔒
+
+**🔒 Requires Event User Authentication**
+
+Obtiene todos los eventos asignados al usuario autenticado.
+
+### Mobile App Authentication Flow
+
+```javascript
+// 1. Login para usuarios de eventos
+const loginResponse = await fetch('/event-user/login', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ 
+    email: 'user@example.com',
+    password: 'Sanfer2025'
+  })
+});
+
+const { accessToken, refreshToken, user } = await loginResponse.json();
+
+// Store tokens securely (encrypted storage recommended)
+await SecureStore.setItemAsync('accessToken', accessToken);
+await SecureStore.setItemAsync('refreshToken', refreshToken);
+await SecureStore.setItemAsync('userId', user.id);
+
+// 2. Hacer requests autenticados
+const response = await fetch(`/event/user/${user.id}`, {
+  headers: {
+    'Authorization': `Bearer ${accessToken}`,
+    'Content-Type': 'application/json'
+  }
+});
+
+// 3. Manejar expiración de tokens
+if (response.status === 401) {
+  // Refresh token
+  const refreshResponse = await fetch('/event-user/refresh', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ 
+      refreshToken: await SecureStore.getItemAsync('refreshToken') 
+    })
+  });
+  
+  if (refreshResponse.ok) {
+    const { accessToken: newAccessToken, refreshToken: newRefreshToken } = 
+      await refreshResponse.json();
+    
+    await SecureStore.setItemAsync('accessToken', newAccessToken);
+    await SecureStore.setItemAsync('refreshToken', newRefreshToken);
+    
+    // Retry original request with new token
+  } else {
+    // Redirect to login screen
+    navigation.navigate('Login');
+  }
+}
+
+// 4. Logout
+await fetch('/event-user/logout', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ 
+    refreshToken: await SecureStore.getItemAsync('refreshToken') 
+  })
+});
+
+// Clear stored data
+await SecureStore.deleteItemAsync('accessToken');
+await SecureStore.deleteItemAsync('refreshToken');
+await SecureStore.deleteItemAsync('userId');
+```
+
+### Security Features for Mobile App
+
+- **Longer token duration**: Access tokens duran 7 días, refresh tokens 30 días para mejor UX móvil
+- **Persistent sessions**: Los usuarios permanecen logueados hasta logout explícito o expiración
+- **Secure token storage**: Se recomienda usar encrypted storage (React Native Keychain/SecureStore)
+- **Automatic token refresh**: Sistema transparente de renovación de tokens
+- **User scope limitation**: Los usuarios solo pueden acceder a sus eventos asignados
+
+### Diferencias con Admin Authentication
+
+| Feature | Admin Auth | Event User Auth |
+|---------|------------|-----------------|
+| Access Token Duration | 15 minutos | 7 días |
+| Refresh Token Duration | 7 días | 30 días |
+| Scope | Dashboard completo | Solo eventos asignados |
+| Endpoints | `/usuarios/*` | `/event-user/*` |
+| User Type | Administradores | Participantes de eventos |
+| Password Changes | Permitidos | No permitidos |
 
 ---
 
@@ -964,6 +1365,209 @@ Manage accommodation options for event attendees.
 ### Delete Hotel
 
 **DELETE** `/hotel/{hotelId}`
+
+---
+
+## 📋 App Menu Configuration
+
+Sistema que permite a los administradores configurar qué secciones del evento serán visibles en la aplicación móvil.
+
+### Secciones Disponibles
+
+Las siguientes secciones pueden ser habilitadas/deshabilitadas por evento:
+
+- **Transporte** - Información y opciones de transporte
+- **Alimentos** - Información sobre comidas y catering
+- **Código de Vestimenta** - Guías de vestimenta para el evento
+- **Ponentes** - Perfiles y información de speakers
+- **Encuestas** - Encuestas de entrada y salida
+- **Hotel** - Información de alojamiento
+- **Agenda** - Cronograma de actividades
+- **Atención Médica** - Información de servicios médicos
+- **Sede** - Información del lugar del evento
+
+### Create App Menu Configuration
+
+**POST** `/app-menu` 🔒
+
+**🔒 Requires Admin Authentication**
+
+Crea una configuración de menú para un evento específico.
+
+**Request Body:**
+
+```json
+{
+  "eventId": "550e8400-e29b-41d4-a716-446655440000",
+  "transporte": true,
+  "alimentos": false,
+  "codigoVestimenta": true,
+  "ponentes": true,
+  "encuestas": true,
+  "hotel": false,
+  "agenda": true,
+  "atencionMedica": false,
+  "sede": true
+}
+```
+
+**Response:**
+
+```json
+{
+  "message": "App menu creado exitosamente",
+  "appMenu": {
+    "id": "menu-uuid",
+    "eventId": "550e8400-e29b-41d4-a716-446655440000",
+    "transporte": true,
+    "alimentos": false,
+    "codigoVestimenta": true,
+    "ponentes": true,
+    "encuestas": true,
+    "hotel": false,
+    "agenda": true,
+    "atencionMedica": false,
+    "sede": true
+  }
+}
+```
+
+### Get App Menu Configuration
+
+**GET** `/app-menu/event/{eventId}`
+
+Obtiene la configuración del menú para un evento. Si no existe, se crea automáticamente con todas las secciones habilitadas.
+
+**Response:**
+
+```json
+{
+  "message": "App menu obtenido exitosamente",
+  "appMenu": {
+    "id": "menu-uuid",
+    "eventId": "550e8400-e29b-41d4-a716-446655440000",
+    "transporte": true,
+    "alimentos": true,
+    "codigoVestimenta": true,
+    "ponentes": true,
+    "encuestas": true,
+    "hotel": true,
+    "agenda": true,
+    "atencionMedica": true,
+    "sede": true
+  }
+}
+```
+
+### Update App Menu Configuration
+
+**PUT** `/app-menu/event/{eventId}` 🔒
+
+**🔒 Requires Admin Authentication**
+
+Actualiza la configuración del menú para un evento específico.
+
+**Request Body:**
+
+```json
+{
+  "transporte": false,
+  "alimentos": true,
+  "atencionMedica": false
+}
+```
+
+**Response:**
+
+```json
+{
+  "message": "App menu actualizado exitosamente",
+  "appMenu": {
+    "id": "menu-uuid",
+    "eventId": "550e8400-e29b-41d4-a716-446655440000",
+    "transporte": false,
+    "alimentos": true,
+    "codigoVestimenta": true,
+    "ponentes": true,
+    "encuestas": true,
+    "hotel": true,
+    "agenda": true,
+    "atencionMedica": false,
+    "sede": true
+  }
+}
+```
+
+### Delete App Menu Configuration
+
+**DELETE** `/app-menu/event/{eventId}` 🔒
+
+**🔒 Requires Admin Authentication**
+
+Elimina la configuración del menú para un evento específico.
+
+### Dashboard Integration
+
+Los administradores pueden gestionar las secciones visibles desde el dashboard:
+
+```javascript
+// Obtener configuración actual
+const menuConfig = await fetch(`/app-menu/event/${eventId}`, {
+  headers: {
+    'Authorization': `Bearer ${adminToken}`
+  }
+});
+
+// Actualizar configuración
+const updateConfig = await fetch(`/app-menu/event/${eventId}`, {
+  method: 'PUT',
+  headers: {
+    'Authorization': `Bearer ${adminToken}`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    transporte: true,
+    alimentos: false,
+    ponentes: true,
+    encuestas: true,
+    hotel: true,
+    agenda: true,
+    atencionMedica: false,
+    sede: true,
+    codigoVestimenta: false
+  })
+});
+```
+
+### Mobile App Usage
+
+La aplicación móvil debe verificar la configuración del menú antes de mostrar las secciones:
+
+```javascript
+// La configuración viene incluida en el endpoint de eventos del usuario
+const userEvents = await fetch(`/event/user/${userId}`, {
+  headers: {
+    'Authorization': `Bearer ${userToken}`
+  }
+});
+
+// Cada evento incluye su configuración appMenu
+userEvents.forEach(event => {
+  const { appMenu } = event;
+  
+  // Mostrar solo las secciones habilitadas
+  if (appMenu.transporte) showTransportSection();
+  if (appMenu.agenda) showAgendaSection();
+  if (appMenu.ponentes) showSpeakersSection();
+  // etc...
+});
+```
+
+### Default Behavior
+
+- **Nuevos eventos**: Se crea automáticamente una configuración con todas las secciones habilitadas
+- **Eventos existentes**: Al consultar por primera vez, se crea la configuración por defecto
+- **Eliminación de eventos**: La configuración del menú se elimina automáticamente (cascade)
 
 ---
 
