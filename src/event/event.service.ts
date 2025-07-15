@@ -139,6 +139,81 @@ export class EventService {
     }
   }
 
+  async createUserAndAssign(eventId: string, createEventUserDto: CreateEventUserDto): Promise<{ message: string; user: any; assignment: any }> {
+    const event = await this.eventRepository.findOne({
+      where: { id: eventId },
+      relations: ['groups'],
+    });
+
+    if (!event) {
+      throw new NotFoundException(`Event with ID ${eventId} not found`);
+    }
+
+    const user = await this.eventUserService.createUserIfNotExists(createEventUserDto);
+
+    if (!user) {
+      throw new Error('Failed to create or find user');
+    }
+
+    let assignment = await this.eventUserAssignmentRepository.findOne({
+      where: {
+        user: { id: user.id },
+        event: { id: event.id },
+      },
+      relations: ['groups'],
+    });
+
+    if (assignment) {
+      return {
+        message: 'User already assigned to this event',
+        user,
+        assignment,
+      };
+    }
+
+    const groupNamesLower = (createEventUserDto.groups || []).map((g) =>
+      g.toLowerCase().trim(),
+    );
+
+    const matchedGroups = event.groups.filter((group) =>
+      groupNamesLower.includes(group.name.toLowerCase().trim()),
+    );
+
+    assignment = this.eventUserAssignmentRepository.create({
+      user,
+      event,
+      groups: matchedGroups,
+    });
+
+    try {
+      await this.eventUserAssignmentRepository.save(assignment);
+      return {
+        message: 'User created and assigned to event successfully',
+        user,
+        assignment,
+      };
+    } catch (error) {
+      handleDBError(error);
+      throw error;
+    }
+  }
+
+  async removeUserFromEvent(eventId: string, userId: string): Promise<void> {
+    const assignment = await this.eventUserAssignmentRepository.findOne({
+      where: {
+        event: { id: eventId },
+        user: { id: userId },
+      },
+      relations: ['event', 'user'],
+    });
+
+    if (!assignment) {
+      throw new NotFoundException('User assignment not found for this event');
+    }
+
+    await this.eventUserAssignmentRepository.remove(assignment);
+  }
+
   async remove(id: string): Promise<void> {
     const event = await this.findOne(id); // Esto ya verifica que existe
     await this.eventRepository.remove(event);

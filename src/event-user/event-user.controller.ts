@@ -46,7 +46,8 @@ export class EventUserController {
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   async refresh(@Body() refreshTokenDto: RefreshEventUserTokenDto) {
-    const tokens = await this.eventUserAuthService.refreshTokens(refreshTokenDto);
+    const tokens =
+      await this.eventUserAuthService.refreshTokens(refreshTokenDto);
     return {
       message: 'Tokens renovados exitosamente',
       ...tokens,

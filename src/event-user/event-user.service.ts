@@ -21,12 +21,14 @@ export class EventUserService {
     createEventUserDto: CreateEventUserDto,
   ): Promise<EventUser | null> {
     const { email } = createEventUserDto;
+    const normalizedEmail = email.toLowerCase().trim();
 
     try {
-      // Buscar usuario existente
-      let eventUser = await this.eventUserRepository.findOne({
-        where: { email },
-      });
+      // Buscar usuario existente (case-insensitive)
+      let eventUser = await this.eventUserRepository
+        .createQueryBuilder('user')
+        .where('LOWER(user.email) = :email', { email: normalizedEmail })
+        .getOne();
 
       if (eventUser) {
         this.logger.log(`User with email ${email} already exists`);
@@ -38,6 +40,7 @@ export class EventUserService {
 
       const newEventUser = this.eventUserRepository.create({
         ...createEventUserDto,
+        email: normalizedEmail,
         password: hashedPassword,
       });
 
@@ -70,10 +73,14 @@ export class EventUserService {
   }
 
   async findByEmail(email: string): Promise<EventUser | null> {
-    return await this.eventUserRepository.findOne({
-      where: { email },
-      relations: ['events', 'events.event', 'events.groups'],
-    });
+    const normalizedEmail = email.toLowerCase().trim();
+    return await this.eventUserRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.events', 'events')
+      .leftJoinAndSelect('events.event', 'event')
+      .leftJoinAndSelect('events.groups', 'groups')
+      .where('LOWER(user.email) = :email', { email: normalizedEmail })
+      .getOne();
   }
 
   async findUsersByEventId(eventId: string): Promise<EventUser[]> {

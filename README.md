@@ -290,6 +290,65 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ]
 ```
 
+### Create Event User and Assign to Event
+
+**POST** `/event/{eventId}/user`
+
+Creates a new event user and assigns them to the specified event. If the user already exists (based on email), they will be assigned to the event. Email validation is case-insensitive.
+
+**Request Body:**
+
+```json
+{
+  "name": "John Doe",
+  "email": "JOHN.DOE@EXAMPLE.COM",
+  "groups": ["VIP Speakers", "Attendees"]
+}
+```
+
+**Response Example:**
+
+```json
+{
+  "message": "User created and assigned to event successfully",
+  "user": {
+    "id": "990fc833-262f-85h8-eb5a-88aa99884444",
+    "name": "John Doe",
+    "email": "john.doe@example.com"
+  },
+  "assignment": {
+    "id": "assignment-uuid",
+    "groups": [
+      {
+        "id": "660f9500-f30c-52e5-b827-557766551111",
+        "name": "VIP Speakers",
+        "color": "#FF6B35"
+      }
+    ]
+  }
+}
+```
+
+**Key Features:**
+- **Case-insensitive email validation**: "JOHN@EXAMPLE.COM" and "john@example.com" are treated as the same user
+- **Automatic user creation**: If user doesn't exist, creates with default password "Sanfer2025"
+- **Group assignment**: Assigns user to specified groups (must exist in the event)
+- **Duplicate prevention**: If user is already assigned to the event, returns existing assignment
+
+### Remove User from Event
+
+**DELETE** `/event/{eventId}/user/{userId}`
+
+Removes the relationship between a user and an event, effectively unassigning the user from the event.
+
+**Example:** `DELETE /event/550e8400-e29b-41d4-a716-446655440000/user/990fc833-262f-85h8-eb5a-88aa99884444`
+
+**Response:** 200 OK (no content)
+
+**Error Responses:**
+- **404 Not Found**: User assignment not found for this event
+- **400 Bad Request**: Invalid UUID format for eventId or userId
+
 ---
 
 ## 📱 Mobile App Endpoints
@@ -585,6 +644,40 @@ Los siguientes endpoints requieren autenticación JWT:
 ```
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
+
+#### Get Current User Profile
+
+**GET** `/usuarios/me`
+
+**🔒 Requires Authentication**
+
+Returns the profile information of the currently authenticated user based on the JWT token.
+
+**Headers Required:**
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+**Response:**
+
+```json
+{
+  "id": "uuid-del-usuario",
+  "nombre": "Juan",
+  "apellido": "Pérez",
+  "email": "admin@company.com",
+  "rol": "admin",
+  "activo": true,
+  "fechaCreacion": "2025-07-14T15:30:00.000Z",
+  "fechaActualizacion": "2025-07-14T15:30:00.000Z"
+}
+```
+
+**Key Features:**
+- Returns user data based on JWT token in Authorization header
+- No password field included in response
+- Maps database field names to Spanish format (createdAt → fechaCreacion)
+- Returns 401 if token is invalid or expired
 
 #### Get All Admin Users
 

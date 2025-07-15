@@ -32,6 +32,14 @@ export class EventController {
     return this.eventService.createAssignment(id, users);
   }
 
+  @Post(':eventId/user')
+  createUserAndAssign(
+    @Param('eventId', ParseUUIDPipe) eventId: string,
+    @Body() createEventUserDto: CreateEventUserDto,
+  ) {
+    return this.eventService.createUserAndAssign(eventId, createEventUserDto);
+  }
+
   @Get()
   findAll() {
     return this.eventService.findAll();
@@ -62,6 +70,14 @@ export class EventController {
     @Body() updateEventDto: UpdateEventDto,
   ) {
     return this.eventService.update(id, updateEventDto);
+  }
+
+  @Delete(':eventId/user/:userId')
+  removeUserFromEvent(
+    @Param('eventId', ParseUUIDPipe) eventId: string,
+    @Param('userId', ParseUUIDPipe) userId: string,
+  ) {
+    return this.eventService.removeUserFromEvent(eventId, userId);
   }
 
   @Delete(':id')
