@@ -1258,19 +1258,33 @@ Returns all agenda items across all events, ordered by start time.
 
 ### Get Agenda by Event
 
-**GET** `/event-agenda/{eventId}`
+**GET** `/event-agenda/{eventId}` 🔒
+
+**🔒 Requires Event User Authentication**
 
 **Example:** `GET /event-agenda/550e8400-e29b-41d4-a716-446655440000`
 
 Returns chronologically ordered agenda for a specific event.
 
+**Headers Required:**
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
 ### Get Agenda by Event and Group (Mobile Optimized)
 
-**GET** `/event-agenda/{eventId}/group/{groupId}`
+**GET** `/event-agenda/{eventId}/group/{groupId}` 🔒
+
+**🔒 Requires Event User Authentication**
 
 **📱 Mobile App Optimized Endpoint**
 
 Gets agenda items for a specific event and group, formatted for React Native Calendar's Agenda component.
+
+**Headers Required:**
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
 
 **Example:** `GET /event-agenda/550e8400-e29b-41d4-a716-446655440000/group/660f9500-f30c-52e5-b827-557766551111`
 
@@ -1446,11 +1460,18 @@ Returns all transport options across all events, ordered by departure time.
 
 ### Get Transports by Event
 
-**GET** `/event-transport/event/{eventId}`
+**GET** `/event-transport/event/{eventId}` 🔒
+
+**🔒 Requires Event User Authentication**
 
 **Example:** `GET /event-transport/event/550e8400-e29b-41d4-a716-446655440000`
 
 Returns chronologically ordered transport options for a specific event.
+
+**Headers Required:**
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
 
 ### Get Transport Details
 
@@ -1524,9 +1545,16 @@ Manage event speakers with their presentations and specializations.
 
 ### Get Speakers by Event
 
-**GET** `/speaker/event/{eventId}`
+**GET** `/speaker/event/{eventId}` 🔒
+
+**🔒 Requires Event User Authentication**
 
 **Example:** `GET /speaker/event/550e8400-e29b-41d4-a716-446655440000`
+
+**Headers Required:**
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
 
 ### Get Speaker Details
 
@@ -1595,9 +1623,16 @@ Manage accommodation options for event attendees.
 
 ### Get Hotels by Event
 
-**GET** `/hotel/event/{eventId}`
+**GET** `/hotel/event/{eventId}` 🔒
+
+**🔒 Requires Event User Authentication**
 
 **Example:** `GET /hotel/event/550e8400-e29b-41d4-a716-446655440000`
+
+**Headers Required:**
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
 
 ### Get Hotel Details
 
@@ -1679,9 +1714,16 @@ Crea una configuración de menú para un evento específico.
 
 ### Get App Menu Configuration
 
-**GET** `/app-menu/event/{eventId}`
+**GET** `/app-menu/event/{eventId}` 🔒
+
+**🔒 Requires Event User Authentication**
 
 Obtiene la configuración del menú para un evento. Si no existe, se crea automáticamente con todas las secciones habilitadas.
+
+**Headers Required:**
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
 
 **Response:**
 
@@ -1953,25 +1995,46 @@ Creates a survey without questions (questions added separately).
 
 ### Get Surveys by Event
 
-**GET** `/survey/event/{eventId}`
+**GET** `/survey/event/{eventId}` 🔒
+
+**🔒 Requires Event User Authentication**
 
 **Example:** `GET /survey/event/550e8400-e29b-41d4-a716-446655440000`
 
 Returns both entry and exit surveys for the event.
 
+**Headers Required:**
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
 ### Get Survey Details
 
-**GET** `/survey/{surveyId}`
+**GET** `/survey/{surveyId}` 🔒
+
+**🔒 Requires Event User Authentication**
 
 Basic survey information without questions.
 
+**Headers Required:**
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
 ### Get Survey with Questions
 
-**GET** `/survey/{surveyId}/with-questions`
+**GET** `/survey/{surveyId}/with-questions` 🔒
+
+**🔒 Requires Event User Authentication**
 
 **Example:** `GET /survey/ff5kh499-8c8l-e1n4-kh1g-eeffff44aaaa/with-questions`
 
 Returns survey with all questions ordered by sequence.
+
+**Headers Required:**
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
 
 ### Get Survey Metrics
 
@@ -2090,9 +2153,16 @@ Handle survey submissions and retrieve response data for analytics.
 
 ### 🚀 Submit Complete Survey Response
 
-**POST** `/survey-response/submit`
+**POST** `/survey-response/submit` 🔒
+
+**🔒 Requires Event User Authentication**
 
 **⭐ Primary endpoint for mobile/web apps**
+
+**Headers Required:**
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
 
 **Request Example:**
 
@@ -2160,9 +2230,16 @@ Handle survey submissions and retrieve response data for analytics.
 
 ### Check if User Already Responded
 
-**GET** `/survey-response/check/{surveyId}/{userId}`
+**GET** `/survey-response/check/{surveyId}/{userId}` 🔒
+
+**🔒 Requires Event User Authentication**
 
 **Example:** `GET /survey-response/check/ff5kh499-8c8l-e1n4-kh1g-eeffff44aaaa/990fc833-262f-85h8-eb5a-88aa99884444`
+
+**Headers Required:**
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
 
 **Response:** `true` or `false`
 
@@ -2182,11 +2259,18 @@ Analytics endpoint to get all responses for a specific survey.
 
 ### Get Responses by User
 
-**GET** `/survey-response/user/{userId}`
+**GET** `/survey-response/user/{userId}` 🔒
+
+**🔒 Requires Event User Authentication**
 
 **Example:** `GET /survey-response/user/990fc833-262f-85h8-eb5a-88aa99884444`
 
 Retrieves all surveys a user has completed.
+
+**Headers Required:**
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
 
 ### Get Response Details
 

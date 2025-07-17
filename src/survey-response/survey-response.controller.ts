@@ -6,16 +6,19 @@ import {
   Param,
   Delete,
   ParseUUIDPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { SurveyResponseService } from './survey-response.service';
 import { CreateSurveyResponseDto } from './dto/create-survey-response.dto';
 import { SubmitSurveyResponseDto } from './dto/submit-survey-response.dto';
+import { EventUserAuthGuard } from 'src/event-user/guards/event-user-auth.guard';
 
 @Controller('survey-response')
 export class SurveyResponseController {
   constructor(private readonly surveyResponseService: SurveyResponseService) {}
 
   @Post('submit')
+  @UseGuards(EventUserAuthGuard)
   submitSurveyResponse(@Body() dto: SubmitSurveyResponseDto) {
     return this.surveyResponseService.submitSurveyResponse(dto);
   }
@@ -36,11 +39,13 @@ export class SurveyResponseController {
   }
 
   @Get('user/:userId')
+  @UseGuards(EventUserAuthGuard)
   findByUserId(@Param('userId', ParseUUIDPipe) userId: string) {
     return this.surveyResponseService.findByUserId(userId);
   }
 
   @Get('check/:surveyId/:userId')
+  @UseGuards(EventUserAuthGuard)
   checkUserResponse(
     @Param('surveyId', ParseUUIDPipe) surveyId: string,
     @Param('userId', ParseUUIDPipe) userId: string,

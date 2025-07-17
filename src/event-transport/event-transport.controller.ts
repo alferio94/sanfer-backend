@@ -7,10 +7,12 @@ import {
   Delete,
   ParseUUIDPipe,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { EventTransportService } from './event-transport.service';
 import { CreateEventTransportDto } from './dto/create-event-transport.dto';
 import { UpdateEventTransportDto } from './dto/update-event-transport.dto';
+import { EventUserAuthGuard } from 'src/event-user/guards/event-user-auth.guard';
 
 @Controller('event-transport')
 export class EventTransportController {
@@ -27,6 +29,7 @@ export class EventTransportController {
   }
 
   @Get('event/:eventId')
+  @UseGuards(EventUserAuthGuard)
   findByEventId(@Param('eventId', ParseUUIDPipe) eventId: string) {
     return this.transportService.findByEventId(eventId);
   }

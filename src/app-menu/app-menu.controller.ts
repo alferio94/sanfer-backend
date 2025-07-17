@@ -15,6 +15,7 @@ import { AppMenuService } from './app-menu.service';
 import { CreateAppMenuDto } from './dto/create-app-menu.dto';
 import { UpdateAppMenuDto } from './dto/update-app-menu.dto';
 import { JwtAuthGuard } from 'src/common/guards/auth.guard';
+import { EventUserAuthGuard } from 'src/event-user/guards/event-user-auth.guard';
 
 @Controller('app-menu')
 export class AppMenuController {
@@ -31,6 +32,7 @@ export class AppMenuController {
   }
 
   @Get('event/:eventId')
+  @UseGuards(EventUserAuthGuard)
   async findByEventId(@Param('eventId', ParseUUIDPipe) eventId: string) {
     const appMenu = await this.appMenuService.findOrCreateByEventId(eventId);
     return {

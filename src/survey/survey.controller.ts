@@ -7,12 +7,14 @@ import {
   Delete,
   ParseUUIDPipe,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { SurveyService } from './survey.service';
 import { CreateSurveyDto } from './dto/create-survey.dto';
 import { UpdateSurveyDto } from './dto/update-survey.dto';
 import { CreateSurveyWithQuestionsDto } from './dto/create-survey-with-questions.dto';
 import { UpdateSurveyWithQuestionsDto } from './dto/update-survey-with-questions.dto';
+import { EventUserAuthGuard } from 'src/event-user/guards/event-user-auth.guard';
 
 @Controller('survey')
 export class SurveyController {
@@ -34,16 +36,19 @@ export class SurveyController {
   }
 
   @Get('event/:eventId')
+  @UseGuards(EventUserAuthGuard)
   findByEventId(@Param('eventId', ParseUUIDPipe) eventId: string) {
     return this.surveyService.findByEventId(eventId);
   }
 
   @Get(':id')
+  @UseGuards(EventUserAuthGuard)
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.surveyService.findOne(id);
   }
 
   @Get(':id/with-questions')
+  @UseGuards(EventUserAuthGuard)
   findWithQuestions(@Param('id', ParseUUIDPipe) id: string) {
     return this.surveyService.findWithQuestions(id);
   }

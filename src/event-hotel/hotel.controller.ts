@@ -7,10 +7,12 @@ import {
   Delete,
   ParseUUIDPipe,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { HotelService } from './hotel.service';
 import { CreateHotelDto } from './dto/create-hotel.dto';
 import { UpdateHotelDto } from './dto/update-hotel.dto';
+import { EventUserAuthGuard } from 'src/event-user/guards/event-user-auth.guard';
 
 @Controller('hotel')
 export class HotelController {
@@ -26,6 +28,7 @@ export class HotelController {
   }
 
   @Get('event/:eventId')
+  @UseGuards(EventUserAuthGuard)
   findByEventId(@Param('eventId', ParseUUIDPipe) eventId: string) {
     return this.hotelService.findByEventId(eventId);
   }
