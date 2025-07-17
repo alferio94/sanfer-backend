@@ -9,3 +9,4 @@ export class LoginEventUserDto {
   @IsNotEmpty()
   password: string;
 }
+

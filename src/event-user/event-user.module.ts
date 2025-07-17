@@ -8,13 +8,13 @@ import { EventUserJwtStrategy } from './event-user-jwt.strategy';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EventUser } from './entities/event-user.entity';
 import { EventUserAssignment } from 'src/event/entities/event-user-assignment.entity';
-import { RefreshToken } from 'src/usuarios/entities/refresh-token.entity';
+import { EventUserRefreshToken } from './entities/event-user-refresh-token.entity';
 
 @Module({
   controllers: [EventUserController],
   providers: [EventUserService, EventUserAuthService, EventUserJwtStrategy],
   imports: [
-    TypeOrmModule.forFeature([EventUser, EventUserAssignment, RefreshToken]),
+    TypeOrmModule.forFeature([EventUser, EventUserAssignment, EventUserRefreshToken]),
     PassportModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'secretKey',

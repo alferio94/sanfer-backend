@@ -139,7 +139,10 @@ export class EventService {
     }
   }
 
-  async createUserAndAssign(eventId: string, createEventUserDto: CreateEventUserDto): Promise<{ message: string; user: any; assignment: any }> {
+  async createUserAndAssign(
+    eventId: string,
+    createEventUserDto: CreateEventUserDto,
+  ): Promise<{ message: string; user: any; assignment: any }> {
     const event = await this.eventRepository.findOne({
       where: { id: eventId },
       relations: ['groups'],
@@ -149,7 +152,8 @@ export class EventService {
       throw new NotFoundException(`Event with ID ${eventId} not found`);
     }
 
-    const user = await this.eventUserService.createUserIfNotExists(createEventUserDto);
+    const user =
+      await this.eventUserService.createUserIfNotExists(createEventUserDto);
 
     if (!user) {
       throw new Error('Failed to create or find user');
@@ -224,9 +228,15 @@ export class EventService {
       where: {
         user: { id: userId },
       },
-      relations: ['event', 'event.groups', 'event.agendas', 'event.appMenu', 'groups'],
+      relations: [
+        'event',
+        'event.groups',
+        'event.agendas',
+        'event.appMenu',
+        'groups',
+      ],
     });
 
-    return assignments.map(assignment => assignment.event);
+    return assignments.map((assignment) => assignment.event);
   }
 }
