@@ -156,6 +156,39 @@ export class EventAgendaService {
     });
   }
 
+  async findAgendaByEventIdAndGroupId(eventId: string, groupId: string) {
+    const agendas = await this.agendaRepo.find({
+      where: { 
+        event: { id: eventId },
+        groups: { id: groupId }
+      },
+      relations: ['event', 'groups'],
+      order: { startDate: 'ASC' },
+    });
+
+    // Format for React Native Calendar agenda component
+    const formattedAgendas = {};
+    
+    agendas.forEach(agenda => {
+      const dateKey = agenda.startDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+      
+      if (!formattedAgendas[dateKey]) {
+        formattedAgendas[dateKey] = [];
+      }
+      
+      formattedAgendas[dateKey].push({
+        name: agenda.title,
+        description: agenda.description,
+        location: agenda.location,
+        startDate: agenda.startDate,
+        endDate: agenda.endDate,
+        height: 50 // Default height for agenda items
+      });
+    });
+
+    return formattedAgendas;
+  }
+
   async remove(id: string): Promise<void> {
     const agenda = await this.findOne(id); // Esto ya verifica que existe
     await this.agendaRepo.remove(agenda);

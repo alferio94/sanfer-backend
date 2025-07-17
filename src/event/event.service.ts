@@ -237,6 +237,10 @@ export class EventService {
       ],
     });
 
-    return assignments.map((assignment) => assignment.event);
+    const currentDate = new Date();
+    
+    return assignments
+      .map((assignment) => assignment.event)
+      .filter((event) => new Date(event.endDate) >= currentDate);
   }
 }

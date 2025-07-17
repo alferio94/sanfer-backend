@@ -21,7 +21,7 @@
 - [x] ✅ Endpoint para obtener eventos por usuario
 - [x] ✅ Sistema de configuración de menú de app móvil
 - [ ] 🔄 Crear Código de vestimenta
-- [ ] 🔄 Obtener Agenda Mobile optimizada
+- [x] ✅ Obtener Agenda Mobile optimizada
 
 # Tech Stack
 
@@ -1197,6 +1197,92 @@ Returns all agenda items across all events, ordered by start time.
 **Example:** `GET /event-agenda/550e8400-e29b-41d4-a716-446655440000`
 
 Returns chronologically ordered agenda for a specific event.
+
+### Get Agenda by Event and Group (Mobile Optimized)
+
+**GET** `/event-agenda/{eventId}/group/{groupId}`
+
+**📱 Mobile App Optimized Endpoint**
+
+Gets agenda items for a specific event and group, formatted for React Native Calendar's Agenda component.
+
+**Example:** `GET /event-agenda/550e8400-e29b-41d4-a716-446655440000/group/660f9500-f30c-52e5-b827-557766551111`
+
+**Response Format:**
+
+```json
+{
+  "2025-07-15": [
+    {
+      "name": "Opening Keynote: The Future of AI",
+      "description": "Industry-leading experts discuss breakthrough AI technologies and their impact on business transformation.",
+      "location": "Main Auditorium - Level 1",
+      "startDate": "2025-07-15T09:00:00.000Z",
+      "endDate": "2025-07-15T10:30:00.000Z",
+      "height": 50
+    },
+    {
+      "name": "AI Workshop",
+      "description": "Hands-on AI implementation workshop",
+      "location": "Workshop Room 1",
+      "startDate": "2025-07-15T14:00:00.000Z",
+      "endDate": "2025-07-15T16:00:00.000Z",
+      "height": 50
+    }
+  ],
+  "2025-07-16": [
+    {
+      "name": "Tech Panel Discussion",
+      "description": "Industry leaders discuss emerging technologies",
+      "location": "Panel Room",
+      "startDate": "2025-07-16T10:00:00.000Z",
+      "endDate": "2025-07-16T11:30:00.000Z",
+      "height": 50
+    }
+  ],
+  "2025-07-17": []
+}
+```
+
+**Key Features:**
+- **Date-based grouping**: Items are grouped by date in `YYYY-MM-DD` format
+- **React Native Calendar compatible**: Direct integration with Agenda component
+- **Group-specific filtering**: Shows only agenda items assigned to the specified group
+- **Complete item details**: Includes all necessary information for mobile display
+- **Empty dates support**: Days with no activities return empty arrays `[]`
+
+**Usage in React Native:**
+
+```javascript
+import { Agenda } from 'react-native-calendars';
+
+const AgendaScreen = ({ eventId, groupId }) => {
+  const [agendaItems, setAgendaItems] = useState({});
+
+  useEffect(() => {
+    fetch(`/api/event-agenda/${eventId}/group/${groupId}`)
+      .then(response => response.json())
+      .then(data => setAgendaItems(data));
+  }, [eventId, groupId]);
+
+  return (
+    <Agenda
+      items={agendaItems}
+      renderItem={(item) => (
+        <View style={styles.agendaItem}>
+          <Text style={styles.itemTitle}>{item.name}</Text>
+          <Text style={styles.itemDescription}>{item.description}</Text>
+          <Text style={styles.itemLocation}>{item.location}</Text>
+          <Text style={styles.itemTime}>
+            {new Date(item.startDate).toLocaleTimeString()} - 
+            {new Date(item.endDate).toLocaleTimeString()}
+          </Text>
+        </View>
+      )}
+    />
+  );
+};
+```
 
 ### Get Agenda Item
 

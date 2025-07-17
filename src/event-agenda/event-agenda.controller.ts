@@ -26,6 +26,14 @@ export class EventAgendaController {
     return this.agendaService.findAgendaByEventId(eventId);
   }
 
+  @Get(':eventId/group/:groupId')
+  findByEventIdAndGroupId(
+    @Param('eventId', ParseUUIDPipe) eventId: string,
+    @Param('groupId', ParseUUIDPipe) groupId: string,
+  ) {
+    return this.agendaService.findAgendaByEventIdAndGroupId(eventId, groupId);
+  }
+
   @Get()
   findAll() {
     return this.agendaService.findAll();
