@@ -28,9 +28,12 @@ export class EventUserAuthService {
     accessToken: string;
     refreshToken: string;
   }> {
-    const user = await this.eventUserRepository.findOne({
-      where: { email: loginEventUserDto.email },
-    });
+    const normalizedEmail = loginEventUserDto.email.toLowerCase().trim();
+    
+    const user = await this.eventUserRepository
+      .createQueryBuilder('user')
+      .where('LOWER(user.email) = :email', { email: normalizedEmail })
+      .getOne();
 
     if (!user) {
       throw new UnauthorizedException('Credenciales inválidas');

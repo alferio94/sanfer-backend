@@ -76,5 +76,4 @@ export class EventUserController {
       message: 'Logout exitoso',
     };
   }
-
 }
