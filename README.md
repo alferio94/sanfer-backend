@@ -895,6 +895,64 @@ Cierra sesión invalidando el refresh token.
 }
 ```
 
+### Get Event User Profile
+
+**GET** `/event-user/profile` 🔒
+
+**🔒 Requires Event User Authentication**
+
+Obtiene los datos completos del usuario autenticado basándose en el token JWT. Este endpoint es esencial para la persistencia de sesión en la aplicación móvil.
+
+**Headers Required:**
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+**Response:**
+
+```json
+{
+  "user": {
+    "id": "990fc833-262f-85h8-eb5a-88aa99884444",
+    "name": "Alice Johnson",
+    "email": "alice@techcorp.com"
+  }
+}
+```
+
+**Key Features:**
+- **Session persistence**: Permite recuperar información del usuario al reiniciar la app
+- **Secure**: Requiere token JWT válido para acceder
+- **Complete user data**: Retorna id, name y email del usuario
+- **Password excluded**: Por seguridad, no incluye el password en la respuesta
+
+**Mobile App Usage:**
+
+```javascript
+// Recuperar perfil del usuario al iniciar la app
+const getUserProfile = async () => {
+  const token = await SecureStore.getItemAsync('accessToken');
+  
+  const response = await fetch('/event-user/profile', {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  });
+  
+  if (response.ok) {
+    const { user } = await response.json();
+    // Usar datos del usuario para UI
+    setUserName(user.name);
+    setUserEmail(user.email);
+    setUserId(user.id);
+  } else if (response.status === 401) {
+    // Token expirado, redirigir a login
+    navigation.navigate('Login');
+  }
+};
+```
+
 ### Protected Mobile Endpoints
 
 Los siguientes endpoints requieren autenticación de usuario de evento:
@@ -911,6 +969,14 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 **🔒 Requires Event User Authentication**
 
 Obtiene todos los eventos asignados al usuario autenticado.
+
+#### Get Event User Profile
+
+**GET** `/event-user/profile` 🔒
+
+**🔒 Requires Event User Authentication**
+
+Obtiene los datos completos del usuario autenticado para persistencia de sesión.
 
 ### Mobile App Authentication Flow
 

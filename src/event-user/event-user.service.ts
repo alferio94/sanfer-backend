@@ -96,4 +96,13 @@ export class EventUserService {
       };
     });
   }
+
+  async findUserProfile(userId: string): Promise<Omit<EventUser, 'password'> | null> {
+    const user = await this.eventUserRepository.findOne({
+      where: { id: userId },
+      select: ['id', 'name', 'email'], // Solo seleccionar campos necesarios, excluir password
+    });
+
+    return user || null;
+  }
 }

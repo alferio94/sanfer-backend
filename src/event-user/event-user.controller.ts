@@ -7,12 +7,15 @@ import {
   Post,
   HttpCode,
   HttpStatus,
+  UseGuards,
+  Request,
 } from '@nestjs/common';
 import { EventUserService } from './event-user.service';
 import { EventUserAuthService } from './event-user-auth.service';
 import { CreateEventUserDto } from './dto/create-event-user.dto';
 import { LoginEventUserDto } from './dto/login-event-user.dto';
 import { RefreshEventUserTokenDto } from './dto/refresh-event-user-token.dto';
+import { EventUserAuthGuard } from './guards/event-user-auth.guard';
 
 @Controller('event-user')
 export class EventUserController {
@@ -60,6 +63,16 @@ export class EventUserController {
     await this.eventUserAuthService.logout(refreshTokenDto);
     return {
       message: 'Logout exitoso',
+    };
+  }
+
+  @Get('profile')
+  @UseGuards(EventUserAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async getProfile(@Request() req) {
+    const user = await this.eventUserService.findUserProfile(req.user.sub);
+    return {
+      user,
     };
   }
 }
