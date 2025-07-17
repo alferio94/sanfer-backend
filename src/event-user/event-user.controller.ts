@@ -31,6 +31,17 @@ export class EventUserController {
   findAll() {
     return this.eventUserService.findAll();
   }
+
+  @Get('profile')
+  @UseGuards(EventUserAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async getProfile(@Request() req) {
+    const user = await this.eventUserService.findUserProfile(req.user.sub);
+    return {
+      user,
+    };
+  }
+
   @Get(':eventId')
   findByEventId(@Param('eventId', ParseUUIDPipe) eventId: string) {
     return this.eventUserService.findUsersByEventId(eventId);
@@ -66,13 +77,4 @@ export class EventUserController {
     };
   }
 
-  @Get('profile')
-  @UseGuards(EventUserAuthGuard)
-  @HttpCode(HttpStatus.OK)
-  async getProfile(@Request() req) {
-    const user = await this.eventUserService.findUserProfile(req.user.sub);
-    return {
-      user,
-    };
-  }
 }
