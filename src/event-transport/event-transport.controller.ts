@@ -29,7 +29,6 @@ export class EventTransportController {
   }
 
   @Get('event/:eventId')
-  @UseGuards(EventUserAuthGuard)
   findByEventId(@Param('eventId', ParseUUIDPipe) eventId: string) {
     return this.transportService.findByEventId(eventId);
   }

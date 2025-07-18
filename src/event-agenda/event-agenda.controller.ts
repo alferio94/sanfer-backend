@@ -24,7 +24,6 @@ export class EventAgendaController {
   }
 
   @Get(':eventId')
-  @UseGuards(EventUserAuthGuard)
   findByEventId(@Param('eventId', ParseUUIDPipe) eventId: string) {
     return this.agendaService.findAgendaByEventId(eventId);
   }

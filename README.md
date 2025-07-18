@@ -20,6 +20,9 @@
 - [x] ✅ Sistema de autenticación JWT para usuarios de eventos (mobile app)
 - [x] ✅ Endpoint para obtener eventos por usuario
 - [x] ✅ Sistema de configuración de menú de app móvil
+- [x] ✅ Corrección crítica de bug de autenticación (normalización de emails)
+- [x] ✅ Guards de autenticación aplicados a endpoints móviles
+- [x] ✅ Sistema de refresh tokens separado para usuarios de eventos
 - [ ] 🔄 Crear Código de vestimenta
 - [x] ✅ Obtener Agenda Mobile optimizada
 
@@ -77,6 +80,65 @@ http://localhost:3000/api
 - [❓ Survey Questions](#-survey-questions)
 - [📝 Survey Responses](#-survey-responses)
 - [🔧 Error Handling](#-error-handling)
+
+---
+
+## 🔐 Authentication Requirements Summary
+
+The API has three types of endpoints based on authentication requirements:
+
+### 🔓 Public Endpoints (No Authentication Required)
+- **Event Management**: `GET /event`, `POST /event`, `GET /event/{id}`, `PUT /event/{id}`, `DELETE /event/{id}`
+- **Event Assignments**: `POST /event/assignment/{eventId}`, `GET /event/{eventId}/assignments/{userId}`
+- **User Creation**: `POST /event-user`, `GET /event-user`, `GET /event-user/{eventId}`
+- **Groups**: All `/event-group/*` endpoints
+- **Speakers**: All `/speaker/*` endpoints (except protected ones)
+- **Hotels**: All `/hotel/*` endpoints (except protected ones)
+- **Surveys**: All `/survey/*` and `/survey-question/*` endpoints (admin usage)
+- **Survey Responses**: `GET /survey-response/*` (admin analytics)
+
+### 🔒 Admin Authentication Required (`Authorization: Bearer <admin_jwt>`)
+- **Admin User Management**: All `/usuarios/*` endpoints
+- **App Menu Management**: `POST /app-menu`, `PUT /app-menu/event/{eventId}`, `DELETE /app-menu/event/{eventId}`
+
+### 📱 Event User Authentication Required (`Authorization: Bearer <event_user_jwt>`)
+- **User Events**: `GET /event/user/{userId}`
+- **User Profile**: `GET /event-user/profile`
+- **Mobile Optimized Endpoints**:
+  - `GET /event-agenda/{eventId}` and `GET /event-agenda/{eventId}/group/{groupId}`
+  - `GET /event-transport/event/{eventId}`
+  - `GET /speaker/event/{eventId}`
+  - `GET /hotel/event/{eventId}`
+  - `GET /survey/event/{eventId}` and `GET /survey/{surveyId}/with-questions`
+  - `POST /survey-response/submit` and `GET /survey-response/check/{surveyId}/{userId}`
+  - `GET /app-menu/event/{eventId}`
+
+### 🔑 Token Types
+
+**Admin JWT Token** (for dashboard/admin usage):
+- **Duration**: 15 minutes
+- **Refresh**: 7 days
+- **Payload**: `{ sub: userId, email: email, rol: "admin" }`
+- **Used by**: Dashboard, admin operations
+
+**Event User JWT Token** (for mobile app):
+- **Duration**: 7 days
+- **Refresh**: 30 days  
+- **Payload**: `{ sub: userId, email: email, type: "event-user" }`
+- **Used by**: Mobile app, participant endpoints
+
+### Common Issues and Solutions
+
+**401 Unauthorized Error on Admin Dashboard:**
+- Ensure you're using the correct admin JWT token
+- Check token expiration (admin tokens expire in 15 minutes)
+- Verify the endpoint doesn't require event user authentication
+- Most event management endpoints (`/event/*`) are public and don't require authentication
+
+**401 Unauthorized Error on Mobile App:**
+- Ensure you're using event user JWT token (not admin token)
+- Check that `payload.type === "event-user"` in the token
+- Verify token hasn't expired (7 day duration)
 
 ---
 

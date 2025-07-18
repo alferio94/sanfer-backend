@@ -29,7 +29,6 @@ export class SpeakerController {
   }
 
   @Get('event/:eventId')
-  @UseGuards(EventUserAuthGuard)
   findByEventId(@Param('eventId', ParseUUIDPipe) eventId: string) {
     return this.speakerService.findByEventId(eventId);
   }
