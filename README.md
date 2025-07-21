@@ -1535,6 +1535,47 @@ Returns chronologically ordered transport options for a specific event.
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
+### Get Transports by Group
+
+**GET** `/event-transport/group/{groupId}`
+
+**Example:** `GET /event-transport/group/660f9500-f30c-52e5-b827-557766551111`
+
+Returns all transport options associated with a specific group, ordered by departure time.
+
+**Response Example:**
+
+```json
+[
+  {
+    "id": "cc2he166-595i-b8k1-he8d-abcdef123456",
+    "name": "Autobús al Aeropuerto",
+    "details": "Servicio de traslado exclusivo desde el hotel hasta el Aeropuerto Internacional",
+    "mapUrl": "https://maps.google.com/route-to-airport",
+    "type": "bus",
+    "departureTime": "2025-07-17T14:00:00.000Z",
+    "event": {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "name": "Tech Innovation Summit 2025"
+    },
+    "groups": [
+      {
+        "id": "660f9500-f30c-52e5-b827-557766551111",
+        "name": "VIP Speakers",
+        "color": "#FF6B35"
+      }
+    ]
+  }
+]
+```
+
+**Key Features:**
+- **Group-specific filtering**: Shows only transports assigned to the specified group
+- **Complete transport details**: Includes all necessary information (name, details, type, departure time)
+- **Event and group relations**: Returns associated event and all assigned groups
+- **Chronological ordering**: Results ordered by departure time (ASC)
+- **Group validation**: Validates that the group exists before querying transports
+
 ### Get Transport Details
 
 **GET** `/event-transport/{id}`

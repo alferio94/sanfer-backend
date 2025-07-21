@@ -89,6 +89,23 @@ export class EventTransportService {
     });
   }
 
+  async findByGroupId(groupId: string): Promise<EventTransport[]> {
+    // Verificar que el grupo existe
+    const group = await this.groupRepo.findOne({
+      where: { id: groupId },
+    });
+
+    if (!group) {
+      throw new NotFoundException(`Group with ID ${groupId} not found`);
+    }
+
+    return await this.transportRepo.find({
+      where: { groups: { id: groupId } },
+      relations: ['event', 'groups'],
+      order: { departureTime: 'ASC' },
+    });
+  }
+
   async findOne(id: string): Promise<EventTransport> {
     const transport = await this.transportRepo.findOne({
       where: { id },

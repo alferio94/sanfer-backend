@@ -33,6 +33,11 @@ export class EventTransportController {
     return this.transportService.findByEventId(eventId);
   }
 
+  @Get('group/:groupId')
+  findByGroupId(@Param('groupId', ParseUUIDPipe) groupId: string) {
+    return this.transportService.findByGroupId(groupId);
+  }
+
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.transportService.findOne(id);
