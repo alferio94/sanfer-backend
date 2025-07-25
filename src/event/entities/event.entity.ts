@@ -1,4 +1,10 @@
-import { Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  OneToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { EventUserAssignment } from './event-user-assignment.entity';
 import { EventAgenda } from 'src/event-agenda/entities/event-agenda.entity';
 import { EventGroup } from 'src/event-group/entities/event-group.entity';

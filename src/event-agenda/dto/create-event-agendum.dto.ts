@@ -86,8 +86,8 @@ export class CreateEventAgendumDto {
   @IsUUID('4', { message: 'Event ID must be a valid UUID' })
   eventId: string;
 
-  @ArrayNotEmpty({ message: 'At least one group must be assigned' })
+@IsOptional()
   @ArrayUnique({ message: 'Group IDs must be unique' })
   @IsUUID('4', { each: true, message: 'Each group ID must be a valid UUID' })
-  groupIds: string[];
+  groupIds?: string[];
 }

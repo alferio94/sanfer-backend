@@ -32,19 +32,22 @@ export class EventAgendaService {
         throw new NotFoundException(`Event with ID ${dto.eventId} not found`);
       }
 
-      // Verificar que todos los grupos existen
-      const groups = await this.groupRepo.find({
-        where: { id: In(dto.groupIds) },
-      });
+      // Verificar que todos los grupos existen (solo si se proporcionaron grupos)
+      let groups: EventGroup[] = [];
+      if (dto.groupIds && dto.groupIds.length > 0) {
+        groups = await this.groupRepo.find({
+          where: { id: In(dto.groupIds) },
+        });
 
-      if (groups.length !== dto.groupIds.length) {
-        const foundGroupIds = groups.map((group) => group.id);
-        const missingGroupIds = dto.groupIds.filter(
-          (id) => !foundGroupIds.includes(id),
-        );
-        throw new NotFoundException(
-          `Groups with IDs ${missingGroupIds.join(', ')} not found`,
-        );
+        if (groups.length !== dto.groupIds.length) {
+          const foundGroupIds = groups.map((group) => group.id);
+          const missingGroupIds = dto.groupIds.filter(
+            (id) => !foundGroupIds.includes(id),
+          );
+          throw new NotFoundException(
+            `Groups with IDs ${missingGroupIds.join(', ')} not found`,
+          );
+        }
       }
 
       // Crear la agenda
