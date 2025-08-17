@@ -161,31 +161,35 @@ export class EventAgendaService {
 
   async findAgendaByEventIdAndGroupId(eventId: string, groupId: string) {
     const agendas = await this.agendaRepo.find({
-      where: { 
+      where: {
         event: { id: eventId },
-        groups: { id: groupId }
+        groups: { id: groupId },
       },
       relations: ['event', 'groups'],
       order: { startDate: 'ASC' },
     });
 
     // Format for React Native Calendar agenda component
-    const formattedAgendas = {};
-    
-    agendas.forEach(agenda => {
-      const dateKey = agenda.startDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-      
+    const formattedAgendas: Record<string, any[]> = {};
+
+    agendas.forEach((agenda) => {
+      // Convert UTC date to CDMX timezone (UTC-6)
+      const cdmxDate = new Date(
+        agenda.startDate.getTime() - 6 * 60 * 60 * 1000,
+      );
+      const dateKey = cdmxDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+
       if (!formattedAgendas[dateKey]) {
         formattedAgendas[dateKey] = [];
       }
-      
+
       formattedAgendas[dateKey].push({
         name: agenda.title,
         description: agenda.description,
         location: agenda.location,
         startDate: agenda.startDate,
         endDate: agenda.endDate,
-        height: 50 // Default height for agenda items
+        height: 50, // Default height for agenda items
       });
     });
 

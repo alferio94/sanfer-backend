@@ -94,7 +94,7 @@ export class EventService {
 
   async findAll(): Promise<AppEvent[]> {
     return await this.eventRepository.find({
-      relations: ['groups', 'appMenu'],
+      relations: ['users', 'users.user', 'groups', 'agendas', 'appMenu'],
       order: { startDate: 'ASC' },
     });
   }
@@ -115,7 +115,7 @@ export class EventService {
   async findOne(id: string): Promise<AppEvent> {
     const event = await this.eventRepository.findOne({
       where: { id },
-      relations: ['groups', 'appMenu'],
+      relations: ['users', 'users.user', 'groups', 'agendas', 'appMenu'],
     });
 
     if (!event) {
