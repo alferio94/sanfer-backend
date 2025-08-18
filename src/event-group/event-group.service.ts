@@ -126,7 +126,19 @@ export class EventGroupService {
   }
 
   async remove(id: string): Promise<void> {
-    const group = await this.findOne(id); // Esto ya verifica que existe
-    await this.eventGroupRepository.remove(group);
+    // Verificar que el grupo existe
+    const group = await this.eventGroupRepository.findOne({ where: { id } });
+    if (!group) {
+      throw new NotFoundException(`Group with ID ${id} not found`);
+    }
+
+    try {
+      // Usar delete() para evitar problemas con relaciones many-to-many
+      // donde EventGroup no es el "owner" de las relaciones
+      await this.eventGroupRepository.delete(id);
+    } catch (error) {
+      handleDBError(error);
+      throw error;
+    }
   }
 }
