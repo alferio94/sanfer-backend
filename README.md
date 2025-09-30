@@ -23,7 +23,7 @@
 - [x] ✅ Corrección crítica de bug de autenticación (normalización de emails)
 - [x] ✅ Guards de autenticación aplicados a endpoints móviles
 - [x] ✅ Sistema de refresh tokens separado para usuarios de eventos
-- [ ] 🔄 Crear Código de vestimenta
+- [x] 🔄 Crear Código de vestimenta
 - [x] ✅ Obtener Agenda Mobile optimizada
 
 # Tech Stack
