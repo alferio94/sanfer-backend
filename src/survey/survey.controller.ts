@@ -47,7 +47,7 @@ export class SurveyController {
   }
 
   @Get(':id/with-questions')
-  @UseGuards(EventUserAuthGuard)
+  // @UseGuards(EventUserAuthGuard)
   findWithQuestions(@Param('id', ParseUUIDPipe) id: string) {
     return this.surveyService.findWithQuestions(id);
   }
