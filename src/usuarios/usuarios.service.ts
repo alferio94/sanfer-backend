@@ -1,4 +1,9 @@
-import { Injectable, ConflictException, UnauthorizedException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  UnauthorizedException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThan } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
@@ -31,7 +36,7 @@ export class UsuariosService {
     }
 
     const hashedPassword = await bcrypt.hash(createUsuarioDto.password, 10);
-    
+
     const usuario = this.usuarioRepository.create({
       ...createUsuarioDto,
       password: hashedPassword,
@@ -40,7 +45,11 @@ export class UsuariosService {
     return this.usuarioRepository.save(usuario);
   }
 
-  async login(loginUsuarioDto: LoginUsuarioDto): Promise<{ usuario: Omit<Usuario, 'password'>; accessToken: string; refreshToken: string; }> {
+  async login(loginUsuarioDto: LoginUsuarioDto): Promise<{
+    usuario: Omit<Usuario, 'password'>;
+    accessToken: string;
+    refreshToken: string;
+  }> {
     const usuario = await this.usuarioRepository.findOne({
       where: { email: loginUsuarioDto.email, activo: true },
     });
@@ -49,8 +58,11 @@ export class UsuariosService {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
-    const isPasswordValid = await bcrypt.compare(loginUsuarioDto.password, usuario.password);
-    
+    const isPasswordValid = await bcrypt.compare(
+      loginUsuarioDto.password,
+      usuario.password,
+    );
+
     if (!isPasswordValid) {
       throw new UnauthorizedException('Credenciales inválidas');
     }
@@ -60,14 +72,23 @@ export class UsuariosService {
 
     return {
       usuario: userResult,
-      ...tokens
+      ...tokens,
     };
   }
 
   async findAll(): Promise<Omit<Usuario, 'password'>[]> {
     const usuarios = await this.usuarioRepository.find({
       where: { activo: true },
-      select: ['id', 'email', 'nombre', 'apellido', 'rol', 'activo', 'createdAt', 'updatedAt'],
+      select: [
+        'id',
+        'email',
+        'nombre',
+        'apellido',
+        'rol',
+        'activo',
+        'createdAt',
+        'updatedAt',
+      ],
     });
     return usuarios;
   }
@@ -75,7 +96,16 @@ export class UsuariosService {
   async findOne(id: string): Promise<Omit<Usuario, 'password'>> {
     const usuario = await this.usuarioRepository.findOne({
       where: { id, activo: true },
-      select: ['id', 'email', 'nombre', 'apellido', 'rol', 'activo', 'createdAt', 'updatedAt'],
+      select: [
+        'id',
+        'email',
+        'nombre',
+        'apellido',
+        'rol',
+        'activo',
+        'createdAt',
+        'updatedAt',
+      ],
     });
 
     if (!usuario) {
@@ -85,15 +115,21 @@ export class UsuariosService {
     return usuario;
   }
 
-  async update(id: string, updateUsuarioDto: UpdateUsuarioDto): Promise<Omit<Usuario, 'password'>> {
+  async update(
+    id: string,
+    updateUsuarioDto: UpdateUsuarioDto,
+  ): Promise<Omit<Usuario, 'password'>> {
     const usuario = await this.usuarioRepository.findOne({ where: { id } });
-    
+
     if (!usuario) {
       throw new NotFoundException('Usuario no encontrado');
     }
 
     if (updateUsuarioDto.password) {
-      updateUsuarioDto.password = await bcrypt.hash(updateUsuarioDto.password, 10);
+      updateUsuarioDto.password = await bcrypt.hash(
+        updateUsuarioDto.password,
+        10,
+      );
     }
 
     await this.usuarioRepository.update(id, updateUsuarioDto);
@@ -102,7 +138,7 @@ export class UsuariosService {
 
   async remove(id: string): Promise<void> {
     const usuario = await this.usuarioRepository.findOne({ where: { id } });
-    
+
     if (!usuario) {
       throw new NotFoundException('Usuario no encontrado');
     }
@@ -110,17 +146,19 @@ export class UsuariosService {
     await this.usuarioRepository.update(id, { activo: false });
   }
 
-  private async generateTokens(usuario: Usuario): Promise<{ accessToken: string; refreshToken: string; }> {
+  private async generateTokens(
+    usuario: Usuario,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     const payload = { sub: usuario.id, email: usuario.email, rol: usuario.rol };
-    
+
     const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
-    
+
     const refreshToken = crypto.randomBytes(32).toString('hex');
     const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
-    
+
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
-    
+
     await this.refreshTokenRepository.save({
       token: hashedRefreshToken,
       usuarioId: usuario.id,
@@ -129,13 +167,15 @@ export class UsuariosService {
 
     return {
       accessToken,
-      refreshToken
+      refreshToken,
     };
   }
 
-  async refreshTokens(refreshTokenDto: RefreshTokenDto): Promise<{ accessToken: string; refreshToken: string; }> {
+  async refreshTokens(
+    refreshTokenDto: RefreshTokenDto,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     const { refreshToken } = refreshTokenDto;
-    
+
     const storedTokens = await this.refreshTokenRepository.find({
       where: {
         revoked: false,
@@ -164,7 +204,7 @@ export class UsuariosService {
 
   async logout(refreshTokenDto: RefreshTokenDto): Promise<void> {
     const { refreshToken } = refreshTokenDto;
-    
+
     const storedTokens = await this.refreshTokenRepository.find({
       where: {
         revoked: false,
@@ -185,11 +225,12 @@ export class UsuariosService {
     const usuario = await this.usuarioRepository.findOne({
       where: { id: payload.sub, activo: true },
     });
-    
+
     if (!usuario) {
       throw new UnauthorizedException('Usuario no encontrado');
     }
-    
+
     return usuario;
   }
 }
+

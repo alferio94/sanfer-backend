@@ -99,7 +99,10 @@ export class UsuariosController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
-  async update(@Param('id') id: string, @Body() updateUsuarioDto: UpdateUsuarioDto) {
+  async update(
+    @Param('id') id: string,
+    @Body() updateUsuarioDto: UpdateUsuarioDto,
+  ) {
     const usuario = await this.usuariosService.update(id, updateUsuarioDto);
     return {
       message: 'Usuario actualizado exitosamente',
@@ -114,3 +117,4 @@ export class UsuariosController {
     await this.usuariosService.remove(id);
   }
 }
+
