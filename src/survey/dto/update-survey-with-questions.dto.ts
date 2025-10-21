@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+  ArrayUnique,
   IsArray,
   IsBoolean,
   IsEnum,
@@ -56,6 +57,11 @@ export class UpdateSurveyWithQuestionsDto {
   @IsOptional()
   @IsBoolean({ message: 'IsActive must be a boolean' })
   isActive?: boolean;
+
+  @IsOptional()
+  @ArrayUnique({ message: 'Group IDs must be unique' })
+  @IsUUID('4', { each: true, message: 'Each group ID must be a valid UUID' })
+  groupIds?: string[];
 
   @IsOptional()
   @IsArray({ message: 'Questions must be an array' })

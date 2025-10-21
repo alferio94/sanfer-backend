@@ -4,8 +4,9 @@ import { UpdateSurveyDto } from './dto/update-survey.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { handleDBError } from 'src/common/utils/dbError.utils';
 import { AppEvent } from 'src/event/entities/event.entity';
+import { EventGroup } from 'src/event-group/entities/event-group.entity';
 import { SurveyQuestion } from 'src/survey-question/entities/survey-question.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Survey } from './entities/survey.entity';
 import { CreateSurveyWithQuestionsDto } from './dto/create-survey-with-questions.dto';
 import { UpdateSurveyWithQuestionsDto } from './dto/update-survey-with-questions.dto';
@@ -19,6 +20,9 @@ export class SurveyService {
 
     @InjectRepository(AppEvent)
     private readonly eventRepo: Repository<AppEvent>,
+
+    @InjectRepository(EventGroup)
+    private readonly groupRepo: Repository<EventGroup>,
 
     @InjectRepository(SurveyQuestion)
     private readonly questionRepo: Repository<SurveyQuestion>,
@@ -37,6 +41,24 @@ export class SurveyService {
         throw new NotFoundException(`Event with ID ${dto.eventId} not found`);
       }
 
+      // Verificar que todos los grupos existen (solo si se proporcionaron grupos)
+      let groups: EventGroup[] = [];
+      if (dto.groupIds && dto.groupIds.length > 0) {
+        groups = await this.groupRepo.find({
+          where: { id: In(dto.groupIds) },
+        });
+
+        if (groups.length !== dto.groupIds.length) {
+          const foundGroupIds = groups.map((group) => group.id);
+          const missingGroupIds = dto.groupIds.filter(
+            (id) => !foundGroupIds.includes(id),
+          );
+          throw new NotFoundException(
+            `Groups with IDs ${missingGroupIds.join(', ')} not found`,
+          );
+        }
+      }
+
       // Crear la encuesta
       const survey = this.surveyRepo.create({
         title: dto.title,
@@ -44,6 +66,7 @@ export class SurveyService {
         type: dto.type,
         isActive: dto.isActive ?? true,
         event,
+        groups,
       });
 
       const savedSurvey = await this.surveyRepo.save(survey);
@@ -65,7 +88,7 @@ export class SurveyService {
       // Retornar la encuesta completa con preguntas
       const result = await this.surveyRepo.findOne({
         where: { id: savedSurvey.id },
-        relations: ['event', 'questions'],
+        relations: ['event', 'groups', 'questions'],
         order: { questions: { order: 'ASC' } },
       });
       if (!result) {
@@ -88,11 +111,30 @@ export class SurveyService {
     try {
       const survey = await this.surveyRepo.findOne({
         where: { id },
-        relations: ['event', 'questions'],
+        relations: ['event', 'groups', 'questions'],
       });
 
       if (!survey) {
         throw new NotFoundException(`Survey with ID ${id} not found`);
+      }
+
+      // Si se proporcionan nuevos groupIds, verificar que existen
+      if (dto.groupIds) {
+        const groups = await this.groupRepo.find({
+          where: { id: In(dto.groupIds) },
+        });
+
+        if (groups.length !== dto.groupIds.length) {
+          const foundGroupIds = groups.map((group) => group.id);
+          const missingGroupIds = dto.groupIds.filter(
+            (id) => !foundGroupIds.includes(id),
+          );
+          throw new NotFoundException(
+            `Groups with IDs ${missingGroupIds.join(', ')} not found`,
+          );
+        }
+
+        survey.groups = groups;
       }
 
       // Actualizar campos de la encuesta
@@ -172,7 +214,7 @@ export class SurveyService {
       // Retornar la encuesta actualizada con preguntas
       const result = await this.surveyRepo.findOne({
         where: { id },
-        relations: ['event', 'questions'],
+        relations: ['event', 'groups', 'questions'],
         order: { questions: { order: 'ASC' } },
       });
       if (!result) {
@@ -197,6 +239,24 @@ export class SurveyService {
         throw new NotFoundException(`Event with ID ${dto.eventId} not found`);
       }
 
+      // Verificar que todos los grupos existen (solo si se proporcionaron grupos)
+      let groups: EventGroup[] = [];
+      if (dto.groupIds && dto.groupIds.length > 0) {
+        groups = await this.groupRepo.find({
+          where: { id: In(dto.groupIds) },
+        });
+
+        if (groups.length !== dto.groupIds.length) {
+          const foundGroupIds = groups.map((group) => group.id);
+          const missingGroupIds = dto.groupIds.filter(
+            (id) => !foundGroupIds.includes(id),
+          );
+          throw new NotFoundException(
+            `Groups with IDs ${missingGroupIds.join(', ')} not found`,
+          );
+        }
+      }
+
       // Crear la encuesta
       const survey = this.surveyRepo.create({
         title: dto.title,
@@ -204,6 +264,7 @@ export class SurveyService {
         type: dto.type,
         isActive: dto.isActive ?? true,
         event,
+        groups,
       });
 
       return await this.surveyRepo.save(survey);
@@ -215,7 +276,7 @@ export class SurveyService {
 
   async findAll(): Promise<Survey[]> {
     return await this.surveyRepo.find({
-      relations: ['event', 'questions'],
+      relations: ['event', 'groups', 'questions'],
       order: { title: 'ASC' },
     });
   }
@@ -232,7 +293,7 @@ export class SurveyService {
 
     return await this.surveyRepo.find({
       where: { event: { id: eventId } },
-      relations: ['event', 'questions'],
+      relations: ['event', 'groups', 'questions'],
       order: { type: 'ASC', title: 'ASC' },
     });
   }
@@ -240,7 +301,7 @@ export class SurveyService {
   async findOne(id: string): Promise<Survey> {
     const survey = await this.surveyRepo.findOne({
       where: { id },
-      relations: ['event', 'questions', 'responses'],
+      relations: ['event', 'groups', 'questions', 'responses'],
     });
 
     if (!survey) {
@@ -253,7 +314,7 @@ export class SurveyService {
   async findWithQuestions(id: string): Promise<Survey> {
     const survey = await this.surveyRepo.findOne({
       where: { id },
-      relations: ['event', 'questions'],
+      relations: ['event', 'groups', 'questions'],
       order: { questions: { order: 'ASC' } },
     });
 
@@ -279,6 +340,25 @@ export class SurveyService {
         }
 
         survey.event = event;
+      }
+
+      // Si se proporcionan nuevos groupIds, verificar que existen
+      if (dto.groupIds) {
+        const groups = await this.groupRepo.find({
+          where: { id: In(dto.groupIds) },
+        });
+
+        if (groups.length !== dto.groupIds.length) {
+          const foundGroupIds = groups.map((group) => group.id);
+          const missingGroupIds = dto.groupIds.filter(
+            (id) => !foundGroupIds.includes(id),
+          );
+          throw new NotFoundException(
+            `Groups with IDs ${missingGroupIds.join(', ')} not found`,
+          );
+        }
+
+        survey.groups = groups;
       }
 
       // Actualizar campos

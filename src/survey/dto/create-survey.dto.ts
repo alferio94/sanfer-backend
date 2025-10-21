@@ -5,6 +5,7 @@ import {
   IsEnum,
   IsBoolean,
   IsUUID,
+  ArrayUnique,
 } from 'class-validator';
 import { SurveyType } from '../entities/survey.entity';
 import { Transform } from 'class-transformer';
@@ -42,4 +43,9 @@ export class CreateSurveyDto {
 
   @IsUUID('4', { message: 'Event ID must be a valid UUID' })
   eventId: string;
+
+  @IsOptional()
+  @ArrayUnique({ message: 'Group IDs must be unique' })
+  @IsUUID('4', { each: true, message: 'Each group ID must be a valid UUID' })
+  groupIds?: string[];
 }

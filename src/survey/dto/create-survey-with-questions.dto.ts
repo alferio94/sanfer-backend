@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+  ArrayUnique,
   IsArray,
   IsBoolean,
   IsEnum,
@@ -54,6 +55,11 @@ export class CreateSurveyWithQuestionsDto {
 
   @IsUUID('4', { message: 'Event ID must be a valid UUID' })
   eventId: string;
+
+  @IsOptional()
+  @ArrayUnique({ message: 'Group IDs must be unique' })
+  @IsUUID('4', { each: true, message: 'Each group ID must be a valid UUID' })
+  groupIds?: string[];
 
   @IsArray({ message: 'Questions must be an array' })
   @ValidateNested({ each: true })

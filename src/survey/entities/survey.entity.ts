@@ -1,9 +1,12 @@
 import { AppEvent } from 'src/event/entities/event.entity';
+import { EventGroup } from 'src/event-group/entities/event-group.entity';
 import { SurveyQuestion } from 'src/survey-question/entities/survey-question.entity';
 import { SurveyResponse } from 'src/survey-response/entities/survey-response.entity';
 import {
   Column,
   Entity,
+  JoinTable,
+  ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -39,6 +42,10 @@ export class Survey {
     onDelete: 'CASCADE',
   })
   event: AppEvent;
+
+  @ManyToMany(() => EventGroup)
+  @JoinTable()
+  groups: EventGroup[];
 
   @OneToMany(() => SurveyQuestion, (question) => question.survey, {
     cascade: true,
