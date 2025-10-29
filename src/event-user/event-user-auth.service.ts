@@ -29,7 +29,7 @@ export class EventUserAuthService {
     refreshToken: string;
   }> {
     const normalizedEmail = loginEventUserDto.email.toLowerCase().trim();
-    
+
     const user = await this.eventUserRepository
       .createQueryBuilder('user')
       .where('LOWER(user.email) = :email', { email: normalizedEmail })

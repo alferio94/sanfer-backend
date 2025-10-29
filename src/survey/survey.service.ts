@@ -298,6 +298,28 @@ export class SurveyService {
     });
   }
 
+  async findByGroupId(groupId: string): Promise<Survey[]> {
+    // Verificar que el grupo existe
+    const group = await this.groupRepo.findOne({
+      where: { id: groupId },
+    });
+
+    if (!group) {
+      throw new NotFoundException(`Group with ID ${groupId} not found`);
+    }
+
+    return await this.surveyRepo
+      .createQueryBuilder('survey')
+      .leftJoinAndSelect('survey.event', 'event')
+      .leftJoinAndSelect('survey.groups', 'groups')
+      .leftJoinAndSelect('survey.questions', 'questions')
+      .where('groups.id = :groupId', { groupId })
+      .orderBy('survey.type', 'ASC')
+      .addOrderBy('survey.title', 'ASC')
+      .addOrderBy('questions.order', 'ASC')
+      .getMany();
+  }
+
   async findOne(id: string): Promise<Survey> {
     const survey = await this.surveyRepo.findOne({
       where: { id },

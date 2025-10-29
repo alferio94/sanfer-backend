@@ -40,6 +40,11 @@ export class SurveyController {
     return this.surveyService.findByEventId(eventId);
   }
 
+  @Get('group/:groupId')
+  findByGroupId(@Param('groupId', ParseUUIDPipe) groupId: string) {
+    return this.surveyService.findByGroupId(groupId);
+  }
+
   @Get(':id')
   @UseGuards(EventUserAuthGuard)
   findOne(@Param('id', ParseUUIDPipe) id: string) {

@@ -88,6 +88,7 @@ http://localhost:3000/api
 The API has three types of endpoints based on authentication requirements:
 
 ### 🔓 Public Endpoints (No Authentication Required)
+
 - **Event Management**: `GET /event`, `POST /event`, `GET /event/{id}`, `PUT /event/{id}`, `DELETE /event/{id}`
 - **Event Assignments**: `POST /event/assignment/{eventId}`, `GET /event/{eventId}/assignments/{userId}`
 - **User Creation**: `POST /event-user`, `GET /event-user`, `GET /event-user/{eventId}`
@@ -98,10 +99,12 @@ The API has three types of endpoints based on authentication requirements:
 - **Survey Responses**: `GET /survey-response/*` (admin analytics)
 
 ### 🔒 Admin Authentication Required (`Authorization: Bearer <admin_jwt>`)
+
 - **Admin User Management**: All `/usuarios/*` endpoints
 - **App Menu Management**: `POST /app-menu`, `PUT /app-menu/event/{eventId}`, `DELETE /app-menu/event/{eventId}`
 
 ### 📱 Event User Authentication Required (`Authorization: Bearer <event_user_jwt>`)
+
 - **User Events**: `GET /event/user/{userId}`
 - **User Profile**: `GET /event-user/profile`
 - **Mobile Optimized Endpoints**:
@@ -116,26 +119,30 @@ The API has three types of endpoints based on authentication requirements:
 ### 🔑 Token Types
 
 **Admin JWT Token** (for dashboard/admin usage):
+
 - **Duration**: 15 minutes
 - **Refresh**: 7 days
 - **Payload**: `{ sub: userId, email: email, rol: "admin" }`
 - **Used by**: Dashboard, admin operations
 
 **Event User JWT Token** (for mobile app):
+
 - **Duration**: 7 days
-- **Refresh**: 30 days  
+- **Refresh**: 30 days
 - **Payload**: `{ sub: userId, email: email, type: "event-user" }`
 - **Used by**: Mobile app, participant endpoints
 
 ### Common Issues and Solutions
 
 **401 Unauthorized Error on Admin Dashboard:**
+
 - Ensure you're using the correct admin JWT token
 - Check token expiration (admin tokens expire in 15 minutes)
 - Verify the endpoint doesn't require event user authentication
 - Most event management endpoints (`/event/*`) are public and don't require authentication
 
 **401 Unauthorized Error on Mobile App:**
+
 - Ensure you're using event user JWT token (not admin token)
 - Check that `payload.type === "event-user"` in the token
 - Verify token hasn't expired (7 day duration)
@@ -315,6 +322,7 @@ Retrieves detailed assignment information for a specific user in an event.
 Retrieves all events assigned to a specific event user.
 
 **Headers Required:**
+
 ```
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
@@ -392,7 +400,8 @@ Creates a new event user and assigns them to the specified event. If the user al
 ```
 
 **Key Features:**
-- **Case-insensitive email validation**: "JOHN@EXAMPLE.COM" and "john@example.com" are treated as the same user
+
+- **Case-insensitive email validation**: "<JOHN@EXAMPLE.COM>" and "<john@example.com>" are treated as the same user
 - **Automatic user creation**: If user doesn't exist, creates with default password "Sanfer2025"
 - **Group assignment**: Assigns user to specified groups (must exist in the event)
 - **Duplicate prevention**: If user is already assigned to the event, returns existing assignment
@@ -408,6 +417,7 @@ Removes the relationship between a user and an event, effectively unassigning th
 **Response:** 200 OK (no content)
 
 **Error Responses:**
+
 - **404 Not Found**: User assignment not found for this event
 - **400 Bad Request**: Invalid UUID format for eventId or userId
 
@@ -456,6 +466,7 @@ Permite a los usuarios de eventos iniciar sesión en la aplicación móvil.
 Obtiene todos los eventos asignados a un usuario específico con toda la información necesaria para la app móvil.
 
 **Headers Required:**
+
 ```
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
@@ -649,6 +660,7 @@ Inicia sesión y obtiene tokens de acceso y renovación.
 ```
 
 **Token Details:**
+
 - **Access Token**: Válido por 15 minutos, usado para autenticar requests
 - **Refresh Token**: Válido por 7 días, usado para renovar access tokens
 
@@ -703,6 +715,7 @@ Cierra sesión invalidando el refresh token.
 Los siguientes endpoints requieren autenticación JWT:
 
 **Headers Required:**
+
 ```
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
@@ -716,6 +729,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 Returns the profile information of the currently authenticated user based on the JWT token.
 
 **Headers Required:**
+
 ```
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
@@ -736,6 +750,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
 **Key Features:**
+
 - Returns user data based on JWT token in Authorization header
 - No password field included in response
 - Maps database field names to Spanish format (createdAt → fechaCreacion)
@@ -778,6 +793,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 **🔒 Requires Authentication**
 
 **Request Body:**
+
 ```json
 {
   "nombre": "Juan Carlos",
@@ -800,7 +816,7 @@ Desactiva el usuario (soft delete) en lugar de eliminarlo completamente.
 const loginResponse = await fetch('/usuarios/login', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ email, password })
+  body: JSON.stringify({ email, password }),
 });
 
 const { accessToken, refreshToken } = await loginResponse.json();
@@ -812,9 +828,9 @@ localStorage.setItem('refreshToken', refreshToken);
 // 2. Make authenticated requests
 const response = await fetch('/usuarios', {
   headers: {
-    'Authorization': `Bearer ${accessToken}`,
-    'Content-Type': 'application/json'
-  }
+    Authorization: `Bearer ${accessToken}`,
+    'Content-Type': 'application/json',
+  },
 });
 
 // 3. Handle token expiration
@@ -823,18 +839,18 @@ if (response.status === 401) {
   const refreshResponse = await fetch('/usuarios/refresh', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ 
-      refreshToken: localStorage.getItem('refreshToken') 
-    })
+    body: JSON.stringify({
+      refreshToken: localStorage.getItem('refreshToken'),
+    }),
   });
-  
+
   if (refreshResponse.ok) {
-    const { accessToken: newAccessToken, refreshToken: newRefreshToken } = 
+    const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
       await refreshResponse.json();
-    
+
     localStorage.setItem('accessToken', newAccessToken);
     localStorage.setItem('refreshToken', newRefreshToken);
-    
+
     // Retry original request
   } else {
     // Redirect to login
@@ -846,9 +862,9 @@ if (response.status === 401) {
 await fetch('/usuarios/logout', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ 
-    refreshToken: localStorage.getItem('refreshToken') 
-  })
+  body: JSON.stringify({
+    refreshToken: localStorage.getItem('refreshToken'),
+  }),
 });
 
 localStorage.removeItem('accessToken');
@@ -865,6 +881,7 @@ JWT_SECRET=your-super-secure-jwt-secret-key-here
 ```
 
 **Security Notes:**
+
 - Access tokens expire in 15 minutes for security
 - Refresh tokens expire in 7 days
 - Refresh tokens are hashed in the database
@@ -908,6 +925,7 @@ Permite a los usuarios de eventos iniciar sesión con su email y contraseña pre
 ```
 
 **Token Details:**
+
 - **Access Token**: Válido por 7 días, usado para autenticar requests
 - **Refresh Token**: Válido por 30 días, usado para renovar access tokens
 
@@ -966,6 +984,7 @@ Cierra sesión invalidando el refresh token.
 Obtiene los datos completos del usuario autenticado basándose en el token JWT. Este endpoint es esencial para la persistencia de sesión en la aplicación móvil.
 
 **Headers Required:**
+
 ```
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
@@ -983,6 +1002,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
 **Key Features:**
+
 - **Session persistence**: Permite recuperar información del usuario al reiniciar la app
 - **Secure**: Requiere token JWT válido para acceder
 - **Complete user data**: Retorna id, name y email del usuario
@@ -994,14 +1014,14 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 // Recuperar perfil del usuario al iniciar la app
 const getUserProfile = async () => {
   const token = await SecureStore.getItemAsync('accessToken');
-  
+
   const response = await fetch('/event-user/profile', {
     headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    }
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
   });
-  
+
   if (response.ok) {
     const { user } = await response.json();
     // Usar datos del usuario para UI
@@ -1020,6 +1040,7 @@ const getUserProfile = async () => {
 Los siguientes endpoints requieren autenticación de usuario de evento:
 
 **Headers Required:**
+
 ```
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
@@ -1047,10 +1068,10 @@ Obtiene los datos completos del usuario autenticado para persistencia de sesión
 const loginResponse = await fetch('/event-user/login', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ 
+  body: JSON.stringify({
     email: 'user@example.com',
-    password: 'Sanfer2025'
-  })
+    password: 'Sanfer2025',
+  }),
 });
 
 const { accessToken, refreshToken, user } = await loginResponse.json();
@@ -1063,9 +1084,9 @@ await SecureStore.setItemAsync('userId', user.id);
 // 2. Hacer requests autenticados
 const response = await fetch(`/event/user/${user.id}`, {
   headers: {
-    'Authorization': `Bearer ${accessToken}`,
-    'Content-Type': 'application/json'
-  }
+    Authorization: `Bearer ${accessToken}`,
+    'Content-Type': 'application/json',
+  },
 });
 
 // 3. Manejar expiración de tokens
@@ -1074,18 +1095,18 @@ if (response.status === 401) {
   const refreshResponse = await fetch('/event-user/refresh', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ 
-      refreshToken: await SecureStore.getItemAsync('refreshToken') 
-    })
+    body: JSON.stringify({
+      refreshToken: await SecureStore.getItemAsync('refreshToken'),
+    }),
   });
-  
+
   if (refreshResponse.ok) {
-    const { accessToken: newAccessToken, refreshToken: newRefreshToken } = 
+    const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
       await refreshResponse.json();
-    
+
     await SecureStore.setItemAsync('accessToken', newAccessToken);
     await SecureStore.setItemAsync('refreshToken', newRefreshToken);
-    
+
     // Retry original request with new token
   } else {
     // Redirect to login screen
@@ -1097,9 +1118,9 @@ if (response.status === 401) {
 await fetch('/event-user/logout', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ 
-    refreshToken: await SecureStore.getItemAsync('refreshToken') 
-  })
+  body: JSON.stringify({
+    refreshToken: await SecureStore.getItemAsync('refreshToken'),
+  }),
 });
 
 // Clear stored data
@@ -1118,14 +1139,14 @@ await SecureStore.deleteItemAsync('userId');
 
 ### Diferencias con Admin Authentication
 
-| Feature | Admin Auth | Event User Auth |
-|---------|------------|-----------------|
-| Access Token Duration | 15 minutos | 7 días |
-| Refresh Token Duration | 7 días | 30 días |
-| Scope | Dashboard completo | Solo eventos asignados |
-| Endpoints | `/usuarios/*` | `/event-user/*` |
-| User Type | Administradores | Participantes de eventos |
-| Password Changes | Permitidos | No permitidos |
+| Feature                | Admin Auth         | Event User Auth          |
+| ---------------------- | ------------------ | ------------------------ |
+| Access Token Duration  | 15 minutos         | 7 días                   |
+| Refresh Token Duration | 7 días             | 30 días                  |
+| Scope                  | Dashboard completo | Solo eventos asignados   |
+| Endpoints              | `/usuarios/*`      | `/event-user/*`          |
+| User Type              | Administradores    | Participantes de eventos |
+| Password Changes       | Permitidos         | No permitidos            |
 
 ---
 
@@ -1329,6 +1350,7 @@ Returns all agenda items across all events, ordered by start time.
 Returns chronologically ordered agenda for a specific event.
 
 **Headers Required:**
+
 ```
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
@@ -1344,6 +1366,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 Gets agenda items for a specific event and group, formatted for React Native Calendar's Agenda component.
 
 **Headers Required:**
+
 ```
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
@@ -1387,6 +1410,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
 **Key Features:**
+
 - **Date-based grouping**: Items are grouped by date in `YYYY-MM-DD` format
 - **React Native Calendar compatible**: Direct integration with Agenda component
 - **Group-specific filtering**: Shows only agenda items assigned to the specified group
@@ -1403,8 +1427,8 @@ const AgendaScreen = ({ eventId, groupId }) => {
 
   useEffect(() => {
     fetch(`/api/event-agenda/${eventId}/group/${groupId}`)
-      .then(response => response.json())
-      .then(data => setAgendaItems(data));
+      .then((response) => response.json())
+      .then((data) => setAgendaItems(data));
   }, [eventId, groupId]);
 
   return (
@@ -1416,7 +1440,7 @@ const AgendaScreen = ({ eventId, groupId }) => {
           <Text style={styles.itemDescription}>{item.description}</Text>
           <Text style={styles.itemLocation}>{item.location}</Text>
           <Text style={styles.itemTime}>
-            {new Date(item.startDate).toLocaleTimeString()} - 
+            {new Date(item.startDate).toLocaleTimeString()} -
             {new Date(item.endDate).toLocaleTimeString()}
           </Text>
         </View>
@@ -1531,6 +1555,7 @@ Returns all transport options across all events, ordered by departure time.
 Returns chronologically ordered transport options for a specific event.
 
 **Headers Required:**
+
 ```
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
@@ -1570,6 +1595,7 @@ Returns all transport options associated with a specific group, ordered by depar
 ```
 
 **Key Features:**
+
 - **Group-specific filtering**: Shows only transports assigned to the specified group
 - **Complete transport details**: Includes all necessary information (name, details, type, departure time)
 - **Event and group relations**: Returns associated event and all assigned groups
@@ -1655,6 +1681,7 @@ Manage event speakers with their presentations and specializations.
 **Example:** `GET /speaker/event/550e8400-e29b-41d4-a716-446655440000`
 
 **Headers Required:**
+
 ```
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
@@ -1733,6 +1760,7 @@ Manage accommodation options for event attendees.
 **Example:** `GET /hotel/event/550e8400-e29b-41d4-a716-446655440000`
 
 **Headers Required:**
+
 ```
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
@@ -1824,6 +1852,7 @@ Crea una configuración de menú para un evento específico.
 Obtiene la configuración del menú para un evento. Si no existe, se crea automáticamente con todas las secciones habilitadas.
 
 **Headers Required:**
+
 ```
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
@@ -1904,16 +1933,16 @@ Los administradores pueden gestionar las secciones visibles desde el dashboard:
 // Obtener configuración actual
 const menuConfig = await fetch(`/app-menu/event/${eventId}`, {
   headers: {
-    'Authorization': `Bearer ${adminToken}`
-  }
+    Authorization: `Bearer ${adminToken}`,
+  },
 });
 
 // Actualizar configuración
 const updateConfig = await fetch(`/app-menu/event/${eventId}`, {
   method: 'PUT',
   headers: {
-    'Authorization': `Bearer ${adminToken}`,
-    'Content-Type': 'application/json'
+    Authorization: `Bearer ${adminToken}`,
+    'Content-Type': 'application/json',
   },
   body: JSON.stringify({
     transporte: true,
@@ -1924,8 +1953,8 @@ const updateConfig = await fetch(`/app-menu/event/${eventId}`, {
     agenda: true,
     atencionMedica: false,
     sede: true,
-    codigoVestimenta: false
-  })
+    codigoVestimenta: false,
+  }),
 });
 ```
 
@@ -1937,14 +1966,14 @@ La aplicación móvil debe verificar la configuración del menú antes de mostra
 // La configuración viene incluida en el endpoint de eventos del usuario
 const userEvents = await fetch(`/event/user/${userId}`, {
   headers: {
-    'Authorization': `Bearer ${userToken}`
-  }
+    Authorization: `Bearer ${userToken}`,
+  },
 });
 
 // Cada evento incluye su configuración appMenu
-userEvents.forEach(event => {
+userEvents.forEach((event) => {
   const { appMenu } = event;
-  
+
   // Mostrar solo las secciones habilitadas
   if (appMenu.transporte) showTransportSection();
   if (appMenu.agenda) showAgendaSection();
@@ -1968,6 +1997,7 @@ Comprehensive survey system supporting entry and exit evaluations with multiple 
 ### 🎯 Overview
 
 The survey system allows you to:
+
 - Create **entry** and **exit** surveys for events
 - Target surveys to specific **groups** (VIP, Speakers, Attendees, etc.)
 - Support **4 question types**: text, multiple choice, rating, boolean
@@ -1989,11 +2019,13 @@ The survey system allows you to:
 ### 🏷️ Group Assignment
 
 **NEW FEATURE**: Surveys can now be assigned to specific groups, just like agenda items. This allows you to:
+
 - Show different surveys to different participant groups
 - Target feedback collection to specific audiences
 - Segment survey analytics by group
 
 **Key Points:**
+
 - ✅ `groupIds` is **optional** - if not provided, survey is available to all event participants
 - ✅ Multiple groups can be assigned to a single survey
 - ✅ Groups must exist in the event before assignment
@@ -2101,14 +2133,14 @@ Creates a survey without questions (questions added separately).
 
 **Field Descriptions:**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `title` | string | ✅ Yes | Survey title (min 3 characters) |
-| `description` | string | ❌ No | Detailed survey description |
-| `type` | enum | ✅ Yes | `"entry"` or `"exit"` |
-| `isActive` | boolean | ❌ No | Enable/disable survey (default: `true`) |
-| `eventId` | UUID | ✅ Yes | Event ID this survey belongs to |
-| `groupIds` | UUID[] | ❌ No | Array of group IDs to target (optional) |
+| Field         | Type    | Required | Description                             |
+| ------------- | ------- | -------- | --------------------------------------- |
+| `title`       | string  | ✅ Yes   | Survey title (min 3 characters)         |
+| `description` | string  | ❌ No    | Detailed survey description             |
+| `type`        | enum    | ✅ Yes   | `"entry"` or `"exit"`                   |
+| `isActive`    | boolean | ❌ No    | Enable/disable survey (default: `true`) |
+| `eventId`     | UUID    | ✅ Yes   | Event ID this survey belongs to         |
+| `groupIds`    | UUID[]  | ❌ No    | Array of group IDs to target (optional) |
 
 **Response:**
 
@@ -2285,6 +2317,7 @@ Returns all surveys across all events with their groups, questions, and event in
 Returns both entry and exit surveys for the event, including assigned groups.
 
 **Headers Required:**
+
 ```
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
@@ -2322,6 +2355,57 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ---
 
+#### Get Surveys by Group
+
+**GET** `/survey/group/{groupId}`
+
+**Example:** `GET /survey/group/660f9500-f30c-52e5-b827-557766551111`
+
+Returns all surveys assigned to a specific group with their event, questions, and group information.
+
+**Response Example:**
+
+```json
+[
+  {
+    "id": "ff5kh499-8c8l-e1n4-kh1g-eeffff44aaaa",
+    "title": "Tech Summit Entry Survey",
+    "description": "Pre-event evaluation to tailor your experience",
+    "type": "entry",
+    "isActive": true,
+    "event": {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "name": "Tech Innovation Summit 2025"
+    },
+    "groups": [
+      {
+        "id": "660f9500-f30c-52e5-b827-557766551111",
+        "name": "VIP Speakers",
+        "color": "#FF6B35"
+      }
+    ],
+    "questions": [
+      {
+        "id": "gg6li5aa-9d9m-f2o5-li2h-ffgggg55bbbb",
+        "questionText": "What are your primary learning objectives for this summit?",
+        "questionType": "text",
+        "isRequired": true,
+        "order": 1
+      }
+    ]
+  }
+]
+```
+
+**Key Features:**
+
+- **Group-specific filtering**: Shows only surveys assigned to the specified group
+- **Complete survey data**: Includes event, groups, and questions (ordered by `order` field)
+- **Group validation**: Validates that the group exists before querying surveys
+- **Chronological ordering**: Results ordered by survey type (entry first, then exit) and title (ASC)
+
+---
+
 #### Get Survey Details
 
 **GET** `/survey/{surveyId}` 🔒
@@ -2331,6 +2415,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 Returns basic survey information including assigned groups, questions, and responses.
 
 **Headers Required:**
+
 ```
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
@@ -2348,6 +2433,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 Returns survey with all questions ordered by sequence, including assigned groups.
 
 **Headers Required:**
+
 ```
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
@@ -2412,9 +2498,7 @@ Updates survey metadata only (not questions).
 {
   "title": "Updated Tech Summit Entry Survey",
   "description": "Enhanced pre-event evaluation",
-  "groupIds": [
-    "660f9500-f30c-52e5-b827-557766551111"
-  ],
+  "groupIds": ["660f9500-f30c-52e5-b827-557766551111"],
   "questions": [
     {
       "id": "gg6li5aa-9d9m-f2o5-li2h-ffgggg55bbbb",
@@ -2448,6 +2532,7 @@ Updates survey metadata only (not questions).
 **DELETE** `/survey/{surveyId}`
 
 Permanently deletes survey and **cascades** to delete:
+
 - All questions
 - All user responses
 - All question answers
@@ -2520,6 +2605,7 @@ Handle survey submissions and retrieve response data for analytics.
 **⭐ Primary endpoint for mobile/web apps**
 
 **Headers Required:**
+
 ```
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
@@ -2553,12 +2639,12 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 **Answer Field Mapping by Question Type:**
 
-| Question Type | Answer Field | Example Value |
-|--------------|--------------|---------------|
-| `text` | `answerValue` | `"My response text"` |
+| Question Type     | Answer Field     | Example Value          |
+| ----------------- | ---------------- | ---------------------- |
+| `text`            | `answerValue`    | `"My response text"`   |
 | `multiple_choice` | `selectedOption` | `"Software Developer"` |
-| `rating` | `ratingValue` | `7` |
-| `boolean` | `booleanValue` | `true` |
+| `rating`          | `ratingValue`    | `7`                    |
+| `boolean`         | `booleanValue`   | `true`                 |
 
 **Response:**
 
@@ -2616,6 +2702,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 **Example:** `GET /survey-response/check/ff5kh499-8c8l-e1n4-kh1g-eeffff44aaaa/990fc833-262f-85h8-eb5a-88aa99884444`
 
 **Headers Required:**
+
 ```
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
@@ -2657,6 +2744,7 @@ Analytics endpoint to get all responses for a specific survey.
 Retrieves all surveys a user has completed.
 
 **Headers Required:**
+
 ```
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
@@ -2687,29 +2775,27 @@ Admin function to remove a response and all associated answers.
 // 1. Get event surveys
 const surveysResponse = await fetch(`/api/survey/event/${eventId}`, {
   headers: {
-    'Authorization': `Bearer ${accessToken}`
-  }
+    Authorization: `Bearer ${accessToken}`,
+  },
 });
 const surveys = await surveysResponse.json();
 
 // 2. Filter surveys by user's groups (optional)
 const userGroups = ['660f9500-f30c-52e5-b827-557766551111'];
-const relevantSurveys = surveys.filter(survey => {
+const relevantSurveys = surveys.filter((survey) => {
   // If survey has no groups, it's for everyone
   if (survey.groups.length === 0) return true;
 
   // Check if user is in any of the survey's groups
-  return survey.groups.some(group =>
-    userGroups.includes(group.id)
-  );
+  return survey.groups.some((group) => userGroups.includes(group.id));
 });
 
 // 3. Check if user already responded
 const checkResponse = await fetch(
   `/api/survey-response/check/${surveyId}/${userId}`,
   {
-    headers: { 'Authorization': `Bearer ${accessToken}` }
-  }
+    headers: { Authorization: `Bearer ${accessToken}` },
+  },
 );
 const hasResponded = await checkResponse.json();
 
@@ -2719,12 +2805,9 @@ if (hasResponded) {
 }
 
 // 4. Get survey with questions
-const surveyResponse = await fetch(
-  `/api/survey/${surveyId}/with-questions`,
-  {
-    headers: { 'Authorization': `Bearer ${accessToken}` }
-  }
-);
+const surveyResponse = await fetch(`/api/survey/${surveyId}/with-questions`, {
+  headers: { Authorization: `Bearer ${accessToken}` },
+});
 const surveyWithQuestions = await surveyResponse.json();
 
 // 5. Display survey to user and collect answers
@@ -2734,14 +2817,14 @@ const userAnswers = collectUserAnswers(surveyWithQuestions.questions);
 const submitResponse = await fetch('/api/survey-response/submit', {
   method: 'POST',
   headers: {
-    'Authorization': `Bearer ${accessToken}`,
-    'Content-Type': 'application/json'
+    Authorization: `Bearer ${accessToken}`,
+    'Content-Type': 'application/json',
   },
   body: JSON.stringify({
     surveyId: surveyId,
     userId: userId,
-    answers: userAnswers
-  })
+    answers: userAnswers,
+  }),
 });
 
 const result = await submitResponse.json();
@@ -2755,6 +2838,7 @@ console.log('Survey submitted successfully:', result);
 #### 1. Survey Creation
 
 ✅ **Do:**
+
 - Use `/with-questions` endpoint for efficiency (single API call)
 - Assign clear, descriptive titles
 - Set appropriate `type` (entry/exit)
@@ -2762,6 +2846,7 @@ console.log('Survey submitted successfully:', result);
 - Order questions logically (simple → complex)
 
 ❌ **Don't:**
+
 - Create surveys without questions (unless adding questions later)
 - Mix entry and exit questions in same survey
 - Forget to set `isActive: false` for draft surveys
@@ -2771,12 +2856,14 @@ console.log('Survey submitted successfully:', result);
 #### 2. Question Design
 
 ✅ **Do:**
+
 - Mark critical questions as `isRequired: true`
 - Use `order` field to control question sequence
 - Provide comprehensive `options` for multiple choice
 - Keep question text clear and concise
 
 ❌ **Don't:**
+
 - Create multiple choice without `options` array
 - Use rating for yes/no (use boolean instead)
 - Make all questions required (users may abandon)
@@ -2786,11 +2873,13 @@ console.log('Survey submitted successfully:', result);
 #### 3. Group Targeting
 
 ✅ **Do:**
+
 - Assign surveys to specific groups when appropriate
 - Leave `groupIds` empty for universal surveys
 - Update group assignments as event structure changes
 
 ❌ **Don't:**
+
 - Assign surveys to non-existent groups
 - Over-segment (too many group-specific surveys)
 
@@ -2799,6 +2888,7 @@ console.log('Survey submitted successfully:', result);
 #### 4. Mobile App Integration
 
 ✅ **Do:**
+
 - Check if user already responded before showing survey
 - Filter surveys by user's groups
 - Cache survey data locally for offline access
@@ -2806,6 +2896,7 @@ console.log('Survey submitted successfully:', result);
 - Handle network errors gracefully
 
 ❌ **Don't:**
+
 - Allow duplicate submissions
 - Show surveys user's group can't access
 - Block UI during submission (use loading states)
@@ -2815,12 +2906,14 @@ console.log('Survey submitted successfully:', result);
 #### 5. Analytics & Reporting
 
 ✅ **Do:**
+
 - Use `/metrics` endpoint for dashboard stats
 - Export responses for detailed analysis
 - Track completion rates by group
 - Monitor response times
 
 ❌ **Don't:**
+
 - Fetch all responses repeatedly (use caching)
 - Expose individual user responses publicly
 
