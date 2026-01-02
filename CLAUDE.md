@@ -8,12 +8,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Stack**: NestJS 11.x + TypeORM 0.3.22 + PostgreSQL + JWT Authentication
 
+**Requirements**: Node.js >=20.0.0
+
 ## Development Commands
 
 ```bash
 # Development
 yarn install              # Install dependencies
 yarn start:dev           # Start dev server with hot reload
+yarn start:debug         # Start in debug mode with hot reload
 
 # Build & Production
 yarn build               # Build for production
@@ -27,6 +30,7 @@ yarn format             # Format code with Prettier
 yarn test                # Run unit tests
 yarn test:watch          # Run tests in watch mode
 yarn test:cov           # Generate coverage report
+yarn test:debug          # Run tests in debug mode
 yarn test:e2e           # Run end-to-end tests
 
 # Docker
@@ -98,8 +102,12 @@ SurveyResponse (1:many) → QuestionAnswers
 ### Global Configuration
 
 **API Prefix**: `/api` (configured in `main.ts`)
-**CORS**: Enabled with credentials
-**Validation**: Global `ValidationPipe` with whitelist enabled
+**Port**: 3000 (default, override with `PORT` environment variable)
+**CORS**: Enabled with credentials (`origin: true, credentials: true`)
+**Validation**: Global `ValidationPipe` with:
+  - `whitelist: true` - strips non-whitelisted properties
+  - `forbidNonWhitelisted: true` - throws error if non-whitelisted properties are present
+  - `transformOptions: { exposeUnsetFields: true }`
 **TypeORM Sync**: `synchronize: true` ⚠️ **Must be `false` in production**
 
 ## Common Development Tasks
@@ -134,6 +142,20 @@ try {
 } catch (error) {
   handleDBError(error); // Throws appropriate NestJS exceptions
 }
+```
+
+### Password Hashing
+
+Use the centralized hash utilities in `src/common/utils/hash.utils.ts`:
+
+```typescript
+import { hashPassword, comparePassword } from '../common/utils/hash.utils';
+
+// Hash a password
+const hashedPassword = await hashPassword(plainPassword);
+
+// Verify a password
+const isValid = await comparePassword(plainPassword, hashedPassword);
 ```
 
 ### Creating Entity Relationships
@@ -188,15 +210,28 @@ This is implemented in `event-user/` module and prevents issues like "USER@EXAMP
 
 ### Default Passwords
 
-Auto-created event users receive default password: `"Sanfer2025"` (see `event.service.ts` user assignment logic)
+Auto-created event users receive a default password based on the current year: `"Sanfer{YEAR}"` (e.g., "Sanfer2026" in 2026, "Sanfer2027" in 2027). This is generated dynamically in `event-user.service.ts:40-41` using `new Date().getFullYear()`.
 
-### JWT Secret Configuration
+### Environment Variables
 
-The app requires `JWT_SECRET` environment variable. Example `.env.layout` shows database config but **not JWT secret**. Ensure this is added to your `.env`:
+The app requires the following environment variables (see `.env.layout` for database config):
 
 ```env
+# Database (provided in .env.layout)
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=Password1234
+DB_NAME=sanfer-db
+
+# JWT (NOT in .env.layout - must add manually)
 JWT_SECRET=your-super-secure-jwt-secret-key-here
+
+# Server (optional)
+PORT=3000  # Defaults to 3000 if not set
 ```
+
+⚠️ **Critical**: `JWT_SECRET` is not included in `.env.layout` but is required for the app to run.
 
 ### Cascade Delete Behavior
 

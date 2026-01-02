@@ -35,8 +35,9 @@ export class EventUserService {
         return eventUser;
       }
 
-      // Crear nuevo usuario
-      const hashedPassword = await hashPassword('Sanfer2025');
+      // Crear nuevo usuario con contraseña dinámica basada en el año actual
+      const currentYear = new Date().getFullYear();
+      const hashedPassword = await hashPassword(`Sanfer${currentYear}`);
 
       const newEventUser = this.eventUserRepository.create({
         ...createEventUserDto,
@@ -106,5 +107,44 @@ export class EventUserService {
     });
 
     return user || null;
+  }
+
+  async bulkUpdatePasswords(year?: number): Promise<{
+    message: string;
+    updatedCount: number;
+    newPassword: string;
+    timestamp: Date;
+  }> {
+    try {
+      const targetYear = year || new Date().getFullYear();
+      const newPassword = `Sanfer${targetYear}`;
+      const hashedPassword = await hashPassword(newPassword);
+
+      // Obtener todos los usuarios
+      const allUsers = await this.eventUserRepository.find();
+
+      // Actualizar contraseña de cada usuario
+      for (const user of allUsers) {
+        user.password = hashedPassword;
+      }
+
+      // Guardar todos los usuarios actualizados
+      await this.eventUserRepository.save(allUsers);
+
+      this.logger.log(
+        `Bulk password update completed. ${allUsers.length} users updated to ${newPassword}`,
+      );
+
+      return {
+        message: 'Passwords updated successfully',
+        updatedCount: allUsers.length,
+        newPassword: newPassword,
+        timestamp: new Date(),
+      };
+    } catch (error) {
+      this.logger.error('Failed to bulk update passwords:', error);
+      handleDBError(error);
+      throw error;
+    }
   }
 }

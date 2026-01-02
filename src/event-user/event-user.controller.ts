@@ -5,6 +5,7 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Patch,
   HttpCode,
   HttpStatus,
   UseGuards,
@@ -15,7 +16,9 @@ import { EventUserAuthService } from './event-user-auth.service';
 import { CreateEventUserDto } from './dto/create-event-user.dto';
 import { LoginEventUserDto } from './dto/login-event-user.dto';
 import { RefreshEventUserTokenDto } from './dto/refresh-event-user-token.dto';
+import { BulkUpdatePasswordsDto } from './dto/bulk-update-passwords.dto';
 import { EventUserAuthGuard } from './guards/event-user-auth.guard';
+import { JwtAuthGuard } from '../common/guards/auth.guard';
 
 @Controller('event-user')
 export class EventUserController {
@@ -75,5 +78,12 @@ export class EventUserController {
     return {
       message: 'Logout exitoso',
     };
+  }
+
+  @Patch('bulk-update-passwords')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async bulkUpdatePasswords(@Body() bulkUpdateDto: BulkUpdatePasswordsDto) {
+    return await this.eventUserService.bulkUpdatePasswords(bulkUpdateDto.year);
   }
 }

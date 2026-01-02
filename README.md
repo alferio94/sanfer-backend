@@ -102,6 +102,7 @@ The API has three types of endpoints based on authentication requirements:
 
 - **Admin User Management**: All `/usuarios/*` endpoints
 - **App Menu Management**: `POST /app-menu`, `PUT /app-menu/event/{eventId}`, `DELETE /app-menu/event/{eventId}`
+- **Bulk Password Update**: `PATCH /event-user/bulk-update-passwords`
 
 ### 📱 Event User Authentication Required (`Authorization: Bearer <event_user_jwt>`)
 
@@ -302,7 +303,7 @@ Bulk assigns users to an event with optional group assignments. Users are create
 
 **Key Features:**
 
-- Creates users automatically with default password "Sanfer2025"
+- Creates users automatically with default password based on current year (e.g., "Sanfer2026" in 2026)
 - Groups are matched by name (case-insensitive)
 - Existing users are updated with new group assignments
 - Groups must exist in the event before assignment
@@ -402,7 +403,7 @@ Creates a new event user and assigns them to the specified event. If the user al
 **Key Features:**
 
 - **Case-insensitive email validation**: "<JOHN@EXAMPLE.COM>" and "<john@example.com>" are treated as the same user
-- **Automatic user creation**: If user doesn't exist, creates with default password "Sanfer2025"
+- **Automatic user creation**: If user doesn't exist, creates with default password based on current year (e.g., "Sanfer2026" in 2026)
 - **Group assignment**: Assigns user to specified groups (must exist in the event)
 - **Duplicate prevention**: If user is already assigned to the event, returns existing assignment
 
@@ -438,7 +439,7 @@ Permite a los usuarios de eventos iniciar sesión en la aplicación móvil.
 ```json
 {
   "email": "user@example.com",
-  "password": "Sanfer2025"
+  "password": "Sanfer2026"
 }
 ```
 
@@ -905,7 +906,7 @@ Permite a los usuarios de eventos iniciar sesión con su email y contraseña pre
 ```json
 {
   "email": "user@example.com",
-  "password": "Sanfer2025"
+  "password": "Sanfer2026"
 }
 ```
 
@@ -1035,6 +1036,80 @@ const getUserProfile = async () => {
 };
 ```
 
+### Bulk Update Event User Passwords
+
+**PATCH** `/event-user/bulk-update-passwords` 🔒
+
+**🔒 Requires Admin Authentication**
+
+Actualiza masivamente las contraseñas de **todos** los usuarios de eventos (event-users) a la contraseña del año especificado o del año actual. Este endpoint está protegido y solo los administradores pueden ejecutarlo.
+
+**Headers Required:**
+
+```
+Authorization: Bearer <admin_jwt_token>
+```
+
+**Request Body (Opcional):**
+
+```json
+{
+  "year": 2026
+}
+```
+
+Si no se proporciona el campo `year`, se usa automáticamente el año actual.
+
+**Response:**
+
+```json
+{
+  "message": "Passwords updated successfully",
+  "updatedCount": 150,
+  "newPassword": "Sanfer2026",
+  "timestamp": "2026-01-02T15:30:00.000Z"
+}
+```
+
+**Key Features:**
+
+- **Admin-only**: Requiere token JWT de administrador (no de event-user)
+- **Bulk operation**: Actualiza TODOS los event-users en una sola operación
+- **Flexible**: Permite especificar año personalizado o usa el año actual por defecto
+- **Audit trail**: Retorna número de usuarios actualizados y timestamp de la operación
+- **Validation**: El año debe estar entre 2020 y 2100
+
+**Use Cases:**
+
+1. **Actualización anual automática**: Al inicio de cada año, ejecutar sin body para actualizar a `Sanfer{añoActual}`
+2. **Migración**: Actualizar usuarios de años anteriores a la contraseña del año actual
+3. **Sincronización**: Asegurar que todos los usuarios tengan la misma contraseña por año
+
+**Example:**
+
+```bash
+# Actualizar a la contraseña del año actual (2026)
+curl -X PATCH http://localhost:3000/api/event-user/bulk-update-passwords \
+  -H "Authorization: Bearer <admin_jwt_token>" \
+  -H "Content-Type: application/json"
+
+# Actualizar a un año específico
+curl -X PATCH http://localhost:3000/api/event-user/bulk-update-passwords \
+  -H "Authorization: Bearer <admin_jwt_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"year": 2027}'
+```
+
+**Security Notes:**
+
+⚠️ Este endpoint es sensible y debe usarse con precaución:
+- Requiere autenticación de administrador
+- Afecta a **todos** los usuarios de eventos
+- Los usuarios deberán usar la nueva contraseña en su próximo login
+- Se recomienda comunicar el cambio a los usuarios después de ejecutar
+
+---
+
 ### Protected Mobile Endpoints
 
 Los siguientes endpoints requieren autenticación de usuario de evento:
@@ -1070,7 +1145,7 @@ const loginResponse = await fetch('/event-user/login', {
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
     email: 'user@example.com',
-    password: 'Sanfer2025',
+    password: 'Sanfer2026',
   }),
 });
 
@@ -1177,7 +1252,7 @@ Creates a user if they don't already exist (based on email).
   "id": "aa0fd944-373g-96i9-fc6b-99bb00995555",
   "name": "Alex Rivera",
   "email": "alex@company.com",
-  "password": "[hashed_password_Sanfer2025]"
+  "password": "[hashed_password_Sanfer2026]"
 }
 ```
 
@@ -3185,7 +3260,7 @@ The API is designed for seamless mobile app integration:
 ## 🔐 Security Notes
 
 - **No authentication** currently implemented (endpoints are public)
-- **Default password** "Sanfer2025" for all auto-created users
+- **Default password** dynamically set based on current year (e.g., "Sanfer2026" in 2026) for all auto-created users
 - **Input validation** implemented on all endpoints
 - **SQL injection protection** via TypeORM parameterized queries
 - **CORS enabled** for cross-origin requests

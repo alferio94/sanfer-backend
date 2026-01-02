@@ -117,4 +117,3 @@ export class UsuariosController {
     await this.usuariosService.remove(id);
   }
 }
-
