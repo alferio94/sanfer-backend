@@ -39,7 +39,7 @@ export class EventUserController {
   @UseGuards(EventUserAuthGuard)
   @HttpCode(HttpStatus.OK)
   async getProfile(@Request() req) {
-    const user = await this.eventUserService.findUserProfile(req.user.sub);
+    const user = await this.eventUserService.findUserProfile(req.user.id);
     return {
       user,
     };
