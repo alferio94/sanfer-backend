@@ -8,6 +8,7 @@ import {
   ParseUUIDPipe,
   Put,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { SurveyService } from './survey.service';
 import { CreateSurveyDto } from './dto/create-survey.dto';
@@ -60,6 +61,62 @@ export class SurveyController {
   @Get(':id/metrics')
   getSurveyMetrics(@Param('id', ParseUUIDPipe) id: string) {
     return this.surveyService.getSurveyMetrics(id);
+  }
+
+  // ============================================
+  // REPORTING ENDPOINTS
+  // ============================================
+
+  /**
+   * Get detailed survey report with statistics per question
+   * @param id Survey ID
+   * @param groupId Optional - Filter by group ID
+   */
+  @Get(':id/report')
+  getSurveyReport(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query('groupId') groupId?: string,
+  ) {
+    return this.surveyService.getSurveyReport(id, groupId);
+  }
+
+  /**
+   * Get list of users who responded to the survey (without their specific answers)
+   * @param id Survey ID
+   * @param groupId Optional - Filter by group ID
+   */
+  @Get(':id/respondents')
+  getSurveyRespondents(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query('groupId') groupId?: string,
+  ) {
+    return this.surveyService.getSurveyRespondents(id, groupId);
+  }
+
+  /**
+   * Get completion rate for a survey (assigned vs completed)
+   * @param id Survey ID
+   * @param groupId Optional - Filter by group ID
+   */
+  @Get(':id/completion-rate')
+  getCompletionRate(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query('groupId') groupId?: string,
+  ) {
+    return this.surveyService.getCompletionRate(id, groupId);
+  }
+
+  /**
+   * Export survey data in JSON format for Excel generation in frontend
+   * @param id Survey ID
+   * @param groupId Optional - Filter by group ID
+   */
+  @Get(':id/export')
+  exportSurvey(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query('groupId') groupId?: string,
+  ) {
+    return this.surveyService.exportSurvey(id, groupId);
   }
 
   @Put(':id')
