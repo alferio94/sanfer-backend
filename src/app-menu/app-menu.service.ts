@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AppMenu } from './entities/app-menu.entity';
@@ -53,9 +57,9 @@ export class AppMenuService {
   ): Promise<AppMenu> {
     try {
       const appMenu = await this.findByEventId(eventId);
-      
+
       Object.assign(appMenu, updateAppMenuDto);
-      
+
       return await this.appMenuRepository.save(appMenu);
     } catch (error) {
       handleDBError(error);

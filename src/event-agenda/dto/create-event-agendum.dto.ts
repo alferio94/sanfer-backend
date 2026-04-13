@@ -14,9 +14,7 @@ import { Transform } from 'class-transformer';
 
 // Custom validator para verificar que endDate > startDate
 @ValidatorConstraint({ name: 'isEndDateAfterStartDate', async: false })
-export class IsEndDateAfterStartDateConstraint
-  implements ValidatorConstraintInterface
-{
+export class IsEndDateAfterStartDateConstraint implements ValidatorConstraintInterface {
   validate(endDate: string, args: ValidationArguments): boolean {
     const startDate = (args.object as CreateEventAgendumDto).startDate;
     if (!startDate || !endDate) return true; // Si faltan fechas, otros validadores se encargarán
@@ -86,7 +84,7 @@ export class CreateEventAgendumDto {
   @IsUUID('4', { message: 'Event ID must be a valid UUID' })
   eventId: string;
 
-@IsOptional()
+  @IsOptional()
   @ArrayUnique({ message: 'Group IDs must be unique' })
   @IsUUID('4', { each: true, message: 'Each group ID must be a valid UUID' })
   groupIds?: string[];

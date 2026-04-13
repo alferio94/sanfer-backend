@@ -1,4 +1,10 @@
-import { Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  OneToOne,
+  JoinColumn,
+} from 'typeorm';
 import { AppEvent } from 'src/event/entities/event.entity';
 
 @Entity({ name: 'app_menus' })

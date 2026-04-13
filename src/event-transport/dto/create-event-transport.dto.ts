@@ -16,9 +16,7 @@ import { TransportType } from '../entities/event-transport.entity';
 
 // Validador personalizado para verificar que la fecha no sea en el pasado
 @ValidatorConstraint({ name: 'isDepartureTimeInFuture', async: false })
-export class IsDepartureTimeInFutureConstraint
-  implements ValidatorConstraintInterface
-{
+export class IsDepartureTimeInFutureConstraint implements ValidatorConstraintInterface {
   validate(departureTime: string): boolean {
     if (!departureTime) return true; // Otros validadores se encargarán
 

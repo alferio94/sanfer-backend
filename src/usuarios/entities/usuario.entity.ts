@@ -35,4 +35,3 @@ export class Usuario {
   @UpdateDateColumn()
   updatedAt: Date;
 }
-

@@ -4,7 +4,10 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { EventUserService } from './event-user.service';
 
 @Injectable()
-export class EventUserJwtStrategy extends PassportStrategy(Strategy, 'event-user-jwt') {
+export class EventUserJwtStrategy extends PassportStrategy(
+  Strategy,
+  'event-user-jwt',
+) {
   constructor(private eventUserService: EventUserService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -17,7 +20,7 @@ export class EventUserJwtStrategy extends PassportStrategy(Strategy, 'event-user
     if (payload.type !== 'event-user') {
       throw new UnauthorizedException();
     }
-    
+
     const user = await this.eventUserService.findOne(payload.sub);
     if (!user) {
       throw new UnauthorizedException();

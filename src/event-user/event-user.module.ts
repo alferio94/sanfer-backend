@@ -14,7 +14,11 @@ import { EventUserRefreshToken } from './entities/event-user-refresh-token.entit
   controllers: [EventUserController],
   providers: [EventUserService, EventUserAuthService, EventUserJwtStrategy],
   imports: [
-    TypeOrmModule.forFeature([EventUser, EventUserAssignment, EventUserRefreshToken]),
+    TypeOrmModule.forFeature([
+      EventUser,
+      EventUserAssignment,
+      EventUserRefreshToken,
+    ]),
     PassportModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'secretKey',
