@@ -1,22 +1,27 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AppEvent } from './entities/event.entity';
 import { EventUserAssignment } from './entities/event-user-assignment.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { EventUserService } from 'src/event-user/event-user.service';
 import { CreateEventUserDto } from 'src/event-user/dto/create-event-user.dto';
 import { handleDBError } from 'src/common/utils/dbError.utils';
+import { hashPassword } from 'src/common/utils/hash.utils';
+import { BulkAssignmentResult } from './interfaces/bulk-assignment-result.interface';
 
 @Injectable()
 export class EventService {
+  private readonly logger = new Logger(EventService.name);
+
   constructor(
     @InjectRepository(AppEvent)
     private readonly eventRepository: Repository<AppEvent>,
     @InjectRepository(EventUserAssignment)
     private readonly eventUserAssignmentRepository: Repository<EventUserAssignment>,
     private readonly eventUserService: EventUserService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(createEventDto: CreateEventDto): Promise<AppEvent> {
@@ -32,7 +37,8 @@ export class EventService {
   async createAssignment(
     id: string,
     users: CreateEventUserDto[],
-  ): Promise<void> {
+  ): Promise<BulkAssignmentResult> {
+    // --- Query 1: Validate event and load its groups ---
     const event = await this.eventRepository.findOne({
       where: { id },
       relations: ['groups'],
@@ -42,53 +48,127 @@ export class EventService {
       throw new NotFoundException(`Event with ID ${id} not found`);
     }
 
-    for (const userData of users) {
-      const user = await this.eventUserService.createUserIfNotExists(userData);
+    // Empty array fast-path — no DB writes
+    if (!users || users.length === 0) {
+      return { created: 0, existing: 0, assigned: 0 };
+    }
 
-      if (!user) {
-        continue; // Skip si no se pudo crear/encontrar el usuario
-      }
+    // Build group lookup: lowercaseName → EventGroup (O(1) lookup in loop)
+    const groupMap = new Map(
+      event.groups.map((g) => [g.name.toLowerCase().trim(), g]),
+    );
 
-      let assignment = await this.eventUserAssignmentRepository.findOne({
-        where: {
-          user: { id: user.id },
-          event: { id: event.id },
-        },
-        relations: ['groups'],
+    // Hash password ONCE for all new users in this request
+    const currentYear = new Date().getFullYear();
+    const hashedPassword = await hashPassword(`Sanfer${currentYear}`);
+
+    try {
+      return await this.dataSource.transaction(async (manager) => {
+        // --- Queries 2 & 3: Bulk create/fetch users ---
+        const { userMap, created, existing } =
+          await this.eventUserService.bulkCreateUsersIfNotExist(
+            manager,
+            users,
+            hashedPassword,
+          );
+
+        if (userMap.size === 0) {
+          return { created: 0, existing: 0, assigned: 0 };
+        }
+
+        // Build assignment rows; deduplicate by userId (same email twice in input)
+        const seenUserIds = new Set<string>();
+        const assignmentValues: { userId: string; eventId: string }[] = [];
+
+        for (const userData of users) {
+          const email = userData.email.toLowerCase().trim();
+          const user = userMap.get(email);
+          if (!user || seenUserIds.has(user.id)) continue;
+          seenUserIds.add(user.id);
+          assignmentValues.push({ userId: user.id, eventId: event.id });
+        }
+
+        const userIds = assignmentValues.map((a) => a.userId);
+
+        // --- Query 4: Bulk insert assignments (ON CONFLICT DO NOTHING) ---
+        if (assignmentValues.length > 0) {
+          await manager
+            .createQueryBuilder()
+            .insert()
+            .into('event_user_assignments', ['userId', 'eventId'])
+            .values(assignmentValues)
+            .orIgnore()
+            .execute();
+        }
+
+        // --- Query 5: Fetch all assignments with existing groups for merge ---
+        const assignments = await manager
+          .getRepository(EventUserAssignment)
+          .createQueryBuilder('a')
+          .leftJoinAndSelect('a.groups', 'g')
+          .leftJoinAndSelect('a.user', 'u')
+          .where('a.eventId = :eventId', { eventId: event.id })
+          .andWhere('u.id IN (:...userIds)', { userIds })
+          .getMany();
+
+        // Build assignmentMap: userId → assignment
+        const assignmentMap = new Map<string, EventUserAssignment>(
+          assignments.map((a) => [a.user.id, a]),
+        );
+
+        // --- Build junction rows in memory ---
+        const junctionRows: { assignment_id: string; group_id: string }[] = [];
+
+        for (const userData of users) {
+          const email = userData.email.toLowerCase().trim();
+          const user = userMap.get(email);
+          if (!user) continue;
+
+          const assignment = assignmentMap.get(user.id);
+          if (!assignment) continue;
+
+          const existingGroupIds = new Set(
+            assignment.groups?.map((g) => g.id) || [],
+          );
+
+          const requestedGroupNames = (userData.groups || []).map((g) =>
+            g.toLowerCase().trim(),
+          );
+
+          for (const groupName of requestedGroupNames) {
+            const group = groupMap.get(groupName);
+            if (!group || existingGroupIds.has(group.id)) continue;
+            // Mark as seen for this assignment to avoid duplicate junction rows
+            // within same request (same user listed multiple times with same group)
+            existingGroupIds.add(group.id);
+            junctionRows.push({
+              assignment_id: assignment.id,
+              group_id: group.id,
+            });
+          }
+        }
+
+        // --- Query 6: Bulk insert junction rows (ON CONFLICT DO NOTHING on PK) ---
+        if (junctionRows.length > 0) {
+          await manager
+            .createQueryBuilder()
+            .insert()
+            .into('assignment_groups', ['assignment_id', 'group_id'])
+            .values(junctionRows)
+            .orIgnore()
+            .execute();
+        }
+
+        this.logger.log(
+          `Bulk assignment complete — eventId=${event.id}: ` +
+            `created=${created}, existing=${existing}, assigned=${assignments.length}`,
+        );
+
+        return { created, existing, assigned: assignments.length };
       });
-
-      // Normalizar nombres de grupos a lowercase
-      const groupNamesLower = (userData.groups || []).map((g) =>
-        g.toLowerCase().trim(),
-      );
-
-      // Buscar grupos existentes en el evento que coincidan
-      const matchedGroups = event.groups.filter((group) =>
-        groupNamesLower.includes(group.name.toLowerCase().trim()),
-      );
-
-      if (!assignment) {
-        assignment = this.eventUserAssignmentRepository.create({
-          user: user,
-          event,
-          groups: matchedGroups,
-        });
-      } else {
-        // Combinar grupos anteriores con nuevos sin duplicados
-        const existingGroupIds = new Set(
-          assignment.groups?.map((g) => g.id) || [],
-        );
-        const newGroups = matchedGroups.filter(
-          (g) => !existingGroupIds.has(g.id),
-        );
-        assignment.groups = [...(assignment.groups || []), ...newGroups];
-      }
-
-      try {
-        await this.eventUserAssignmentRepository.save(assignment);
-      } catch (error) {
-        handleDBError(error);
-      }
+    } catch (error) {
+      handleDBError(error);
+      throw error;
     }
   }
 
@@ -238,7 +318,7 @@ export class EventService {
     });
 
     const currentDate = new Date();
-    
+
     return assignments
       .map((assignment) => assignment.event)
       .filter((event) => new Date(event.endDate) >= currentDate);

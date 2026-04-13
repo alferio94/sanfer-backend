@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { CreateEventUserDto } from './dto/create-event-user.dto';
 import { EventUser } from './entities/event-user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { hashPassword } from 'src/common/utils/hash.utils';
 import { handleDBError } from 'src/common/utils/dbError.utils';
 import { EventUserAssignment } from 'src/event/entities/event-user-assignment.entity';
@@ -16,6 +16,86 @@ export class EventUserService {
     @InjectRepository(EventUserAssignment)
     private readonly eventUserAssignmentRepository: Repository<EventUserAssignment>,
   ) {}
+
+  /**
+   * Bulk insert users that don't exist yet (email conflict = DO NOTHING),
+   * then SELECT all users whose emails match, returning a Map<lowercaseEmail, EventUser>.
+   *
+   * This method is designed to be called INSIDE an existing transaction via its EntityManager.
+   * It computes the stats (created vs existing) by comparing what was in the DB before the insert.
+   */
+  async bulkCreateUsersIfNotExist(
+    manager: EntityManager,
+    users: CreateEventUserDto[],
+    hashedPassword: string,
+  ): Promise<{
+    userMap: Map<string, EventUser>;
+    created: number;
+    existing: number;
+  }> {
+    if (!users || users.length === 0) {
+      return { userMap: new Map(), created: 0, existing: 0 };
+    }
+
+    // Normalize & deduplicate emails before any DB operation
+    const seen = new Set<string>();
+    const uniqueUsers: CreateEventUserDto[] = [];
+    for (const u of users) {
+      const normalized = u.email.toLowerCase().trim();
+      if (!seen.has(normalized)) {
+        seen.add(normalized);
+        uniqueUsers.push({ ...u, email: normalized });
+      }
+    }
+
+    const normalizedEmails = uniqueUsers.map((u) => u.email);
+
+    // Step 1: SELECT existing users so we know how many already exist
+    const existingUsers = await manager
+      .createQueryBuilder(EventUser, 'user')
+      .where('LOWER(user.email) IN (:...emails)', { emails: normalizedEmails })
+      .getMany();
+
+    const existingEmailSet = new Set(
+      existingUsers.map((u) => u.email.toLowerCase().trim()),
+    );
+
+    // Step 2: Build insert values for NEW users only
+    const newUserValues = uniqueUsers
+      .filter((u) => !existingEmailSet.has(u.email))
+      .map((u) => ({
+        name: u.name,
+        email: u.email,
+        password: hashedPassword,
+      }));
+
+    if (newUserValues.length > 0) {
+      await manager
+        .createQueryBuilder()
+        .insert()
+        .into(EventUser)
+        .values(newUserValues)
+        .orIgnore() // ON CONFLICT (email) DO NOTHING — handles race conditions
+        .execute();
+    }
+
+    // Step 3: SELECT all users (new + existing) to get their IDs
+    const allUsers = await manager
+      .createQueryBuilder(EventUser, 'user')
+      .where('LOWER(user.email) IN (:...emails)', { emails: normalizedEmails })
+      .getMany();
+
+    const userMap = new Map<string, EventUser>();
+    for (const user of allUsers) {
+      userMap.set(user.email.toLowerCase().trim(), user);
+    }
+
+    return {
+      userMap,
+      created: newUserValues.length,
+      existing: existingUsers.length,
+    };
+  }
 
   async createUserIfNotExists(
     createEventUserDto: CreateEventUserDto,
